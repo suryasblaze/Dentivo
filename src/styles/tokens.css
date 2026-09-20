@@ -1,0 +1,99 @@
+/* ============================================================
+   Dentivo — Design Tokens
+   Dense, professional dashboard scale. Derived from the
+   client reference. EDIT ONLY THIS FILE TO RE-SKIN.
+   ============================================================ */
+:root {
+  /* ---------- Brand green ---------- */
+  --g-900: #0A382D;
+  --g-800: #0F4B3C;
+  --g-700: #145E4B;
+  --g-600: #197E65;   /* PRIMARY — taken from the Dentivo logo */
+  --g-500: #1F9678;
+  --g-400: #43B191;
+  --g-300: #7FCCB2;
+  --g-200: #B2E0D0;
+  --g-100: #DCF1E9;
+  --g-50:  #EFF8F5;
+
+  /* ---------- Accent palette (icon tiles, categories, charts) ---------- */
+  --a-blue:   #2B63D9;  --a-blue-bg:   #E8EFFC;
+  --a-violet: #6A44CC;  --a-violet-bg: #EFEAFB;
+  --a-amber:  #C8860D;  --a-amber-bg:  #FCF2DF;
+  --a-rose:   #C93F4A;  --a-rose-bg:   #FBEAEB;
+  --a-teal:   #0E7C7B;  --a-teal-bg:   #E2F3F3;
+  --a-indigo: #3B4B9A;  --a-indigo-bg: #EAEDF8;
+  --a-clay:   #B65A2E;  --a-clay-bg:   #FBEDE4;
+  --a-slate:  #4E5765;  --a-slate-bg:  #EEF0F3;
+
+  /* semantic aliases */
+  --amber: var(--a-amber);  --amber-bg: var(--a-amber-bg);
+  --red:   var(--a-rose);   --red-bg:   var(--a-rose-bg);
+  --blue:  var(--a-blue);   --blue-bg:  var(--a-blue-bg);
+  --violet:var(--a-violet); --violet-bg:var(--a-violet-bg);
+
+  /* ---------- Neutrals ---------- */
+  --ink:      #22303A;
+  --ink-2:    #39414C;
+  --muted:    #6C7480;
+  --faint:    #9AA1AC;
+  --line:     #E6E8EB;
+  --line-2:   #F0F1F3;
+  --surface:  #FFFFFF;
+  --surface-2:#FAFBFB;
+  --canvas:   #F2F3F5;
+  --dark:     #12151A;
+  --dark-2:   #1E222A;
+  --dark-3:   #2B303A;
+
+  /* ---------- Tooth conditions ---------- */
+  --t-healthy: #FFFFFF;
+  --t-caries:  var(--a-rose);
+  --t-filled:  var(--a-blue);
+  --t-rct:     var(--a-violet);
+  --t-crown:   var(--a-amber);
+  --t-missing: #C3C8CE;
+  --t-implant: var(--g-600);
+  --t-planned: var(--g-400);
+
+  /* ---------- Type scale (deliberately small — dashboard density) ---------- */
+  --fs-micro: 9.5px;   /* eyebrow / uppercase labels */
+  --fs-xs:    10.5px;  /* meta, captions */
+  --fs-sm:    11.5px;  /* secondary text */
+  --fs-base:  12.5px;  /* body */
+  --fs-md:    13px;    /* emphasis, row titles */
+  --fs-lg:    14.5px;  /* card titles */
+  --fs-xl:    19px;    /* page title */
+  --fs-stat:  23px;    /* stat numbers */
+  --fs-hero:  30px;    /* kiosk / patient-facing only */
+
+  --lh-tight: 1.25;
+  --lh-base:  1.5;
+  --lh-loose: 1.6;
+
+  /* ---------- Spacing ---------- */
+  --s-1: 3px;  --s-2: 5px;  --s-3: 7px;  --s-4: 9px;
+  --s-5: 12px; --s-6: 14px; --s-7: 18px; --s-8: 22px; --s-9: 28px;
+
+  /* ---------- Radius ---------- */
+  --r-xs: 5px;
+  --r-sm: 7px;
+  --r-md: 9px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+  --r-pill: 999px;
+
+  /* ---------- Elevation ---------- */
+  --sh-1: 0 1px 1px rgba(16,20,25,.03);
+  --sh-2: 0 2px 8px rgba(16,20,25,.05);
+  --sh-3: 0 10px 34px rgba(16,20,25,.14);
+  --sh-in: inset 0 1px 0 rgba(255,255,255,.14);
+
+  /* ---------- Type family ---------- */
+  --font: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-num: 'Plus Jakarta Sans', ui-monospace, monospace;
+
+  /* ---------- Layout ---------- */
+  --sidebar-w: 218px;
+  --topbar-h: 52px;
+}
