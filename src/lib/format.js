@@ -60,3 +60,7 @@ export const initialsOf = (name = '') =>
   name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase()
 
 export const ageBand = (age) => (age < 13 ? 'Child' : age < 20 ? 'Teen' : age < 60 ? 'Adult' : 'Senior')
+
+/* "Mon, 21 Sep" — for chart tooltips */
+export const prettyDay = (iso) =>
+  new Date(iso + 'T00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })

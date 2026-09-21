@@ -1,4 +1,5 @@
 import React from 'react'
+export { LineChart, BarChart, Donut, Ring, RankList } from './Charts'
 import { IconArrowUpRight, IconTrendUp, IconCheck, IconPlus, IconX } from '../lib/icons'
 
 /* ============================================================
@@ -153,25 +154,6 @@ export const MetricBar = ({ name, value, pct, color = 'var(--g-600)' }) => (
 /* ============================================================
    Ring stat — small circular progress
    ============================================================ */
-export const Ring = ({ value, size = 54, thickness = 5, label, caption, color = 'var(--g-600)' }) => {
-  const r = (size - thickness) / 2
-  const circ = 2 * Math.PI * r
-  return (
-    <div className="ring" style={{ width: size, height: size }}>
-      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--line)" strokeWidth={thickness} />
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={thickness}
-          strokeLinecap="round" strokeDasharray={`${(value / 100) * circ} ${circ}`}
-          style={{ transition: 'stroke-dasharray .7s cubic-bezier(.2,.7,.3,1)' }} />
-      </svg>
-      <div className="ring-mid">
-        <b>{label ?? `${value}%`}</b>
-        {caption && <small>{caption}</small>}
-      </div>
-    </div>
-  )
-}
-
 /* ============================================================
    Switch
    ============================================================ */
@@ -243,26 +225,6 @@ export const Empty = ({ icon, children }) => (
 /* ============================================================
    Charts — hand-built SVG, no library
    ============================================================ */
-export const BarChart = ({ data, highlight }) => {
-  const max = Math.max(...data.map(d => d.treat + d.consult))
-  return (
-    <div className="bar-chart">
-      {data.map(d => {
-        const on = d.d === highlight
-        return (
-          <div key={d.d} className={`bar-col ${on ? 'on' : ''}`} title={`${d.d}: ${d.treat + d.consult}`}>
-            <div className="bar-stack">
-              <div className="bar-seg" style={{ height: `${(d.consult / max) * 100}%`, background: on ? 'var(--g-300)' : 'var(--g-100)' }} />
-              <div className="bar-seg" style={{ height: `${(d.treat / max) * 100}%`, background: on ? 'var(--g-600)' : 'var(--line)' }} />
-            </div>
-            <span className="bar-lbl">{d.d}</span>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
 export const Gauge = ({ value, label, caption, size = 136 }) => {
   const r = size / 2 - 11
   const circ = Math.PI * r
@@ -280,29 +242,6 @@ export const Gauge = ({ value, label, caption, size = 136 }) => {
         <b>{value}%</b><small>{label}</small>
       </div>
       {caption && <div className="tooth-legend" style={{ justifyContent: 'center' }}>{caption}</div>}
-    </div>
-  )
-}
-
-export const Donut = ({ segments, size = 122, thickness = 14, center }) => {
-  const r = (size - thickness) / 2
-  const circ = 2 * Math.PI * r
-  let acc = 0
-  return (
-    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
-      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-        {segments.map((s, i) => {
-          const len = (s.pct / 100) * circ
-          const el = (
-            <circle key={i} cx={size / 2} cy={size / 2} r={r} fill="none" stroke={s.color}
-              strokeWidth={thickness} strokeDasharray={`${Math.max(0, len - 2)} ${circ - len + 2}`}
-              strokeDashoffset={-acc} strokeLinecap="round" />
-          )
-          acc += len
-          return el
-        })}
-      </svg>
-      {center && <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', textAlign: 'center' }}>{center}</div>}
     </div>
   )
 }
@@ -330,66 +269,6 @@ export const Blank = ({ icon, title, children, action }) => (
     {action}
   </div>
 )
-
-/* ============================================================
-   Line / area chart for the dashboard analytics
-   ============================================================ */
-export const LineChart = ({
-  points = [], labels = [], h = 150, color = 'var(--g-600)', fill = 'rgba(24,120,74,.10)', money,
-}) => {
-  const w = 480
-  const pad = 22
-  const max = Math.max(1, ...points)
-  const step = points.length > 1 ? (w - pad * 2) / (points.length - 1) : 0
-  const y = (v) => h - pad - (v / max) * (h - pad * 2)
-  const coords = points.map((v, i) => [pad + i * step, y(v)])
-  const line = coords.map(([x, yy], i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${yy.toFixed(1)}`).join(' ')
-  const area = `${line} L${(pad + (points.length - 1) * step).toFixed(1)},${h - pad} L${pad},${h - pad} Z`
-
-  return (
-    <div className="lchart">
-      <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
-        {[0, 0.25, 0.5, 0.75, 1].map(t => (
-          <line key={t} className="grid-line" x1={pad} x2={w - pad}
-            y1={pad + t * (h - pad * 2)} y2={pad + t * (h - pad * 2)} />
-        ))}
-        {points.length > 1 && <path d={area} fill={fill} />}
-        {points.length > 1 && <path d={line} fill="none" stroke={color} strokeWidth="2"
-          strokeLinecap="round" strokeLinejoin="round" />}
-        {coords.map(([x, yy], i) => (
-          <circle key={i} cx={x} cy={yy} r={i === coords.length - 1 ? 3.5 : 2.5}
-            fill={i === coords.length - 1 ? color : 'var(--surface)'} stroke={color} strokeWidth="1.6" />
-        ))}
-      </svg>
-      <div className="row" style={{ justifyContent: 'space-between', padding: '0 18px', marginTop: -4 }}>
-        {labels.map(l => (
-          <span key={l} className="faint" style={{ fontSize: 'var(--fs-micro)', fontWeight: 700 }}>{l}</span>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-/* Horizontal ranked bar list — used for "top procedures", "sources" */
-export const RankList = ({ rows = [], empty = 'No data yet' }) => {
-  if (!rows.length) return <div className="empty">{empty}</div>
-  const max = Math.max(...rows.map(r => r.value))
-  return (
-    <div>
-      {rows.map(r => (
-        <div key={r.name} className="mbar">
-          <div className="mbar-top">
-            <span className="nm">{r.name}</span>
-            <span className="vl">{r.display ?? r.value}</span>
-          </div>
-          <div className="mbar-track">
-            <div className="mbar-fill" style={{ width: `${(r.value / max) * 100}%`, background: r.color || 'var(--g-600)' }} />
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
 
 /* ============================================================
    Chip group with a free-text "Other" escape hatch.

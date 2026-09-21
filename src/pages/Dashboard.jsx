@@ -2,10 +2,10 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Card, Stat, Badge, Avatar, Tile, DataRow, Eyebrow, SectionHead,
-  LineChart, RankList, Donut, Ring, Blank, MetricBar,
+  LineChart, BarChart, RankList, Donut, Ring, Blank, MetricBar,
 } from '../components/UI'
 import { useClinic } from '../store/ClinicStore'
-import { inr, inrShort, greeting, todayLong, prettyDate, localISO } from '../lib/format'
+import { inr, inrShort, greeting, todayLong, prettyDate, prettyDay, localISO } from '../lib/format'
 import {
   IconQr, IconFile, IconUsers, IconCalendar, IconQueue, IconRupee, IconStar,
   IconArrowRight, IconPlus, IconCheck, IconTooth, IconReceipt, IconAlert,
@@ -131,7 +131,7 @@ export default function Dashboard() {
         <Card title="Collections — last 7 days" sub="From payments actually recorded" corner>
           {revenueByDay.some(v => v > 0) ? (
             <>
-              <LineChart points={revenueByDay} labels={days.map(d => d.label)} h={160} />
+              <LineChart points={revenueByDay} labels={days.map(d => d.label)} tips={days.map(d => prettyDay(d.iso))} h={180} money />
               <div className="divider-x" />
               <div className="grid g-4" style={{ gap: 0 }}>
                 {[
@@ -177,8 +177,8 @@ export default function Dashboard() {
       <div className="grid g-3" style={{ marginBottom: 10 }}>
         <Card title="Visits per day" sub="Last 7 days" corner>
           {patientsByDay.some(v => v > 0)
-            ? <LineChart points={patientsByDay} labels={days.map(d => d.label)} h={130}
-                color="var(--a-blue)" fill="rgba(43,99,217,.10)" />
+            ? <BarChart points={patientsByDay} labels={days.map(d => d.label)} tips={days.map(d => prettyDay(d.iso))}
+                h={150} unit=" visit" />
             : <Blank icon={<IconUsers size={18} />} title="No visits yet">Check a patient in to start the chart.</Blank>}
         </Card>
 
@@ -187,7 +187,7 @@ export default function Dashboard() {
             <div className="row" style={{ gap: 12 }}>
               <Donut size={96} thickness={12}
                 segments={mixRows.map(r => ({
-                  pct: (r.value / mixRows.reduce((s, x) => s + x.value, 0)) * 100, color: r.color,
+                  label: r.name, pct: (r.value / mixRows.reduce((s, x) => s + x.value, 0)) * 100, color: r.color,
                 }))}
                 center={<div>
                   <div className="strong mono-num" style={{ fontSize: 'var(--fs-md)' }}>

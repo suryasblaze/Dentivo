@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
-import { Card, Stat, Eyebrow, Blank, LineChart, RankList, Donut, Seg, Tile, DataRow, Ring } from '../components/UI'
+import { Card, Stat, Eyebrow, Blank, LineChart, BarChart, RankList, Donut, Seg, Tile, DataRow, Ring } from '../components/UI'
 import { useClinic } from '../store/ClinicStore'
-import { inr, inrShort, prettyDate, localISO } from '../lib/format'
+import { inr, inrShort, prettyDate, prettyDay, localISO } from '../lib/format'
 import { IconChart, IconUsers, IconStar, IconFile } from '../lib/icons'
 
 const seriesDays = (n) => {
@@ -22,7 +22,8 @@ export default function Reports() {
   const revenue = days.map(d => visits.filter(v => v.date === d.iso)
     .reduce((s, v) => s + (v.payments || []).reduce((x, p) => x + Number(p.amount || 0), 0), 0))
   const count = days.map(d => visits.filter(v => v.date === d.iso).length)
-  const axis = days.filter((_, i) => i % Math.ceil(range / 7) === 0).map(d => d.label)
+  const axis = days.map(d => d.label)
+  const tips = days.map(d => prettyDay(d.iso))
 
   const totalRevenue = revenue.reduce((a, b) => a + b, 0)
   const totalVisits = visits.length
@@ -121,11 +122,10 @@ export default function Reports() {
 
       <div className="grid g-2" style={{ marginBottom: 10 }}>
         <Card title="Collections" sub={`Last ${range} days`} corner>
-          <LineChart points={revenue} labels={axis} h={170} />
+          <LineChart points={revenue} labels={axis} tips={tips} h={180} money />
         </Card>
         <Card title="Visits per day" sub={`Last ${range} days`} corner>
-          <LineChart points={count} labels={axis} h={170}
-            color="var(--a-blue)" fill="rgba(43,99,217,.10)" />
+          <BarChart points={count} labels={axis} tips={tips} h={180} unit=" visit" />
         </Card>
       </div>
 
@@ -134,7 +134,7 @@ export default function Reports() {
           {mixRows.length ? (
             <div className="row" style={{ gap: 12 }}>
               <Donut size={92} thickness={11}
-                segments={mixRows.map(r => ({ pct: (r.value / mixTotal) * 100, color: r.color }))} />
+                segments={mixRows.map(r => ({ label: r.name, pct: (r.value / mixTotal) * 100, color: r.color }))} />
               <div style={{ flex: 1, minWidth: 0 }}><RankList rows={mixRows} /></div>
             </div>
           ) : <div className="empty">No completed procedures yet</div>}
