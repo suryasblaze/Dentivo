@@ -7,7 +7,7 @@
    ========================================================================= */
 import {
   IconGrid, IconQr, IconFile, IconUsers, IconCalendar, IconQueue, IconStethoscope,
-  IconTooth, IconReceipt, IconRupee, IconWhatsApp, IconStar, IconHeart, IconChart,
+  IconTooth, IconReceipt, IconRupee, IconStar, IconChart,
   IconSettings, IconShield, IconSparkle,
 } from '../lib/icons'
 
@@ -28,11 +28,9 @@ export const NAV = [
       { n: 5,  key: 'checkin',      to: '/checkin',      label: 'Check-In',          Icon: IconQueue,       feature: 'checkin', badge: 'queue' },
       { n: 6,  key: 'consultation', to: '/consultation', label: 'Consultation',      Icon: IconStethoscope, feature: 'charting' },
       { n: 7,  key: 'treatment',    to: '/treatment',    label: 'Treatment',         Icon: IconTooth,       feature: 'treatment' },
-      { n: 8,  key: 'billing',      to: '/billing',      label: 'Billing',           Icon: IconReceipt,     feature: 'billing' },
-      { n: 9,  key: 'payment',      to: '/payment',      label: 'Payment',           Icon: IconRupee,       feature: 'payments' },
-      { n: 10, key: 'whatsapp',     to: '/whatsapp',     label: 'WhatsApp Bill',     Icon: IconWhatsApp,    feature: 'whatsapp' },
-      { n: 11, key: 'review',       to: '/review',       label: 'Review & Google',   Icon: IconStar,        feature: 'reviews' },
-      { n: 12, key: 'done',         to: '/done',         label: 'Thank You / Reset', Icon: IconHeart },
+      { n: 8,  key: 'billing',      to: '/billing',      label: 'Billing & Checkout', Icon: IconReceipt,    feature: 'billing' },
+      { n: 9,  key: 'payment',      to: '/payment',      label: 'Payments',           Icon: IconRupee,      feature: 'payments' },
+      { n: 10, key: 'review',       to: '/review',       label: 'Reviews',            Icon: IconStar,       feature: 'reviews' },
     ],
   },
   {
@@ -63,9 +61,9 @@ export const ALWAYS_ON = ['dashboard', 'subscription']
 export const ROLE_PAGES = {
   r_admin: ALL_PAGES,
   r_dentist: ['dashboard', 'patients', 'appointments', 'checkin', 'consultation', 'treatment',
-    'billing', 'review', 'done', 'reports', 'requests', 'subscription'],
+    'billing', 'review', 'reports', 'requests', 'subscription'],
   r_reception: ['dashboard', 'link', 'submissions', 'patients', 'appointments', 'checkin',
-    'billing', 'payment', 'whatsapp', 'review', 'done', 'requests', 'subscription'],
+    'billing', 'payment', 'review', 'requests', 'subscription'],
   r_assistant: ['dashboard', 'patients', 'appointments', 'checkin', 'consultation', 'subscription'],
   r_accounts: ['dashboard', 'patients', 'billing', 'payment', 'reports', 'subscription'],
 }

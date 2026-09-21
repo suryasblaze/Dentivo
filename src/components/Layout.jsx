@@ -27,7 +27,7 @@ function Sidebar() {
 
   /* how far the active visit has travelled, so the nav can tick off stages */
   const stageIdx = visit ? VISIT_STAGES.indexOf(visit.stage) : -1
-  const stageOfNav = { 5: 'checkin', 6: 'consultation', 7: 'treatment', 8: 'billing', 9: 'payment', 10: 'whatsapp', 11: 'review', 12: 'done' }
+  const stageOfNav = { 5: 'checkin', 6: 'consultation', 7: 'treatment', 8: 'billing' }
 
   return (
     <aside className="sidebar">
@@ -195,15 +195,11 @@ export function VisitStrip() {
   const nav = useNavigate()
   if (!visit || !patient) return null
 
-  const labels = {
-    checkin: 'Check-in', consultation: 'Consultation', treatment: 'Treatment',
-    billing: 'Billing', payment: 'Payment', whatsapp: 'WhatsApp', review: 'Review', done: 'Done',
-  }
-  const paths = {
-    checkin: '/checkin', consultation: '/consultation', treatment: '/treatment',
-    billing: '/billing', payment: '/payment', whatsapp: '/whatsapp', review: '/review', done: '/done',
-  }
-  const idx = VISIT_STAGES.indexOf(visit.stage)
+  /* the four stages a visit actually moves through; "done" is shown as a tick */
+  const STEPS = VISIT_STAGES.filter(s => s !== 'done')
+  const labels = { checkin: 'Check-in', consultation: 'Consultation', treatment: 'Treatment', billing: 'Checkout' }
+  const paths = { checkin: '/checkin', consultation: '/consultation', treatment: '/treatment', billing: '/billing' }
+  const idx = visit.stage === 'done' ? STEPS.length : STEPS.indexOf(visit.stage)
 
   return (
     <div className="visit-strip">
@@ -216,13 +212,14 @@ export function VisitStrip() {
       </div>
       <div className="spacer" />
       <div className="visit-steps">
-        {VISIT_STAGES.map((st, i) => (
+        {STEPS.map((st, i) => (
           <button key={st} className={`vstep ${i < idx ? 'done' : ''} ${i === idx ? 'now' : ''}`}
             onClick={() => nav(paths[st])}>
             <span className="vd">{i < idx ? <IconCheck size={8} /> : i + 5}</span>
             <span className="vl">{labels[st]}</span>
           </button>
         ))}
+        {visit.stage === 'done' && <span className="badge green" style={{ marginLeft: 6 }}><IconCheck size={8} /> Closed</span>}
       </div>
       <button className="btn btn-ghost btn-sm"
         onClick={() => { dispatch({ type: 'SET_ACTIVE_VISIT', id: null }); nav('/dashboard') }}>

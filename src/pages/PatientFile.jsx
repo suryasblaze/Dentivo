@@ -4,7 +4,7 @@ import { Card, Badge, Avatar, Tabs, Eyebrow, Tile, DataRow, Blank, Field, Chip, 
 import Odontogram from '../components/Odontogram'
 import { useClinic } from '../store/ClinicStore'
 import { MEDICAL_FLAGS, ALLERGY_OPTIONS, condLabel, toothName } from '../data/catalog'
-import { GENDERS, ISSUES } from '../data/config'
+import { GENDERS, ISSUES, stagePath } from '../data/config'
 import { inr, prettyDate } from '../lib/format'
 import {
   IconArrowLeft, IconAlert, IconPhone, IconQueue, IconCheck, IconEdit,
@@ -210,7 +210,7 @@ export default function PatientFile() {
                       const vPaid = (v.payments || []).reduce((s, x) => s + Number(x.amount || 0), 0)
                       return (
                         <tr key={v.id} style={{ cursor: 'pointer' }}
-                          onClick={() => { dispatch({ type: 'SET_ACTIVE_VISIT', id: v.id }); nav('/' + v.stage) }}>
+                          onClick={() => { dispatch({ type: 'SET_ACTIVE_VISIT', id: v.id }); nav(stagePath(v.stage)) }}>
                           <td className="cell-strong">{prettyDate(v.date)}</td>
                           <td>{v.reason || v.visitType}</td>
                           <td className="mono-num">{(v.plan || []).filter(x => x.status === 'done').length}</td>

@@ -35,15 +35,18 @@ export const STAGES = [
   { key: 'checkin', n: 5, label: 'Check-In', path: '/checkin', owner: 'Reception' },
   { key: 'consultation', n: 6, label: 'Consultation', path: '/consultation', owner: 'Dentist' },
   { key: 'treatment', n: 7, label: 'Treatment', path: '/treatment', owner: 'Dentist' },
-  { key: 'billing', n: 8, label: 'Billing', path: '/billing', owner: 'Reception' },
-  { key: 'payment', n: 9, label: 'Payment', path: '/payment', owner: 'Reception' },
-  { key: 'whatsapp', n: 10, label: 'WhatsApp Bill', path: '/whatsapp', owner: 'System' },
-  { key: 'review', n: 11, label: 'Review & Google', path: '/review', owner: 'Patient' },
-  { key: 'done', n: 12, label: 'Thank You / Reset', path: '/done', owner: 'System' },
+  { key: 'billing', n: 8, label: 'Billing & Checkout', path: '/billing', owner: 'Reception' },
+  { key: 'payment', n: 9, label: 'Payments', path: '/payment', owner: 'Reception' },
+  { key: 'review', n: 10, label: 'Reviews', path: '/review', owner: 'Patient' },
 ]
 
 /* Visit stage order used for the "next stage" button */
-export const VISIT_STAGES = ['checkin', 'consultation', 'treatment', 'billing', 'payment', 'whatsapp', 'review', 'done']
+export const VISIT_STAGES = ['checkin', 'consultation', 'treatment', 'billing', 'done']
+
+/* Where to open a visit from any list. A finished visit opens its bill. */
+export const stagePath = (stage) =>
+  ({ checkin: '/checkin', consultation: '/consultation', treatment: '/treatment',
+     billing: '/billing', done: '/billing' }[stage] || '/billing')
 
 export const GENDERS = ['Female', 'Male', 'Other']
 

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Blank, Card, Avatar, DataRow, Badge } from '../../components/UI'
 import { useClinic } from '../../store/ClinicStore'
 import { IconQueue, IconArrowRight } from '../../lib/icons'
+import { stagePath } from '../../data/config'
 
 /* Shown on any stage page when no visit is active.
    Offers the open visits so the user can pick one instead of hitting a dead end. */
@@ -29,7 +30,7 @@ export default function NoVisit({ stage }) {
               const p = patients.find(x => x.id === v.patientId)
               return (
                 <DataRow key={v.id}
-                  onClick={() => { dispatch({ type: 'SET_ACTIVE_VISIT', id: v.id }); nav('/' + v.stage) }}
+                  onClick={() => { dispatch({ type: 'SET_ACTIVE_VISIT', id: v.id }); nav(stagePath(v.stage)) }}
                   lead={<Avatar name={p?.name} color="#197E65" size={26} />}
                   title={p?.name} sub={`${v.token} · arrived ${v.arrivedAt}`}
                   trail={<><Badge tone="green" dot>{v.stage}</Badge>
@@ -48,7 +49,7 @@ export default function NoVisit({ stage }) {
               const p = patients.find(x => x.id === v.patientId)
               return (
                 <DataRow key={v.id}
-                  onClick={() => { dispatch({ type: 'SET_ACTIVE_VISIT', id: v.id }); nav('/done') }}
+                  onClick={() => { dispatch({ type: 'SET_ACTIVE_VISIT', id: v.id }); nav('/billing') }}
                   lead={<Avatar name={p?.name} color="#197E65" size={26} />}
                   title={p?.name} sub={`${v.date} · ${v.token}`}
                   trail={<><Badge>{v.rating ? `${v.rating}★` : 'closed'}</Badge>

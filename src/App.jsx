@@ -5,6 +5,9 @@ import Layout from './components/Layout'
 import { pageByPath } from './data/nav'
 
 import PublicIntake from './pages/PublicIntake'
+import PublicReview from './pages/PublicReview'
+import Payments from './pages/Payments'
+import Reviews from './pages/Reviews'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import PatientLink from './pages/PatientLink'
@@ -22,12 +25,8 @@ import FeatureRequests from './pages/FeatureRequests'
 import Consultation from './pages/stages/Consultation'
 import Treatment from './pages/stages/Treatment'
 import Billing from './pages/stages/Billing'
-import Payment from './pages/stages/Payment'
-import WhatsAppBill from './pages/stages/WhatsAppBill'
-import ReviewStage from './pages/stages/ReviewStage'
-import Done from './pages/stages/Done'
 
-/* Side navigation = the 12 stages, in order */
+/* Side navigation = the 10 stages, in order */
 const PAGES = [
   ['/dashboard', Dashboard],
   ['/link', PatientLink],
@@ -39,10 +38,8 @@ const PAGES = [
   ['/consultation', Consultation],
   ['/treatment', Treatment],
   ['/billing', Billing],
-  ['/payment', Payment],
-  ['/whatsapp', WhatsAppBill],
-  ['/review', ReviewStage],
-  ['/done', Done],
+  ['/payment', Payments],
+  ['/review', Reviews],
   ['/reports', Reports],
   ['/settings', Settings],
   ['/roles', Roles],
@@ -92,6 +89,7 @@ function Router() {
       <Routes>
         {/* public — what the QR opens */}
         <Route path="/intake" element={<PublicIntake />} />
+        <Route path="/r/:id" element={<PublicReview />} />
 
         <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
         {PAGES.map(([path, Comp]) => (

@@ -8,7 +8,7 @@ Front-end demo — no backend yet. Everything you type is saved in your browser.
 ```bash
 npm install
 npm run dev     # http://localhost:5173
-npm test        # persistence tests
+npm test        # storage, store logic, PDF and render tests
 npm run build   # static bundle in dist/
 ```
 
@@ -29,11 +29,9 @@ The side navigation *is* the patient workflow, in order:
 | 5 | Check-In | Scheduled arrivals and walk-ins both start a visit |
 | 6 | Consultation | FDI odontogram, findings, diagnosis |
 | 7 | Treatment | Plan, tick what was done, prescribe, after-care |
-| 8 | Billing | Invoice built from completed work |
-| 9 | Payment | Real UPI intent QR, card, cash, EMI |
-| 10 | WhatsApp Bill | Bill, medicines and care notes in one message |
-| 11 | Review & Google | 4★+ to Google, 3★ or less privately to the owner |
-| 12 | Thank You / Reset | Chart merged into the record, desk resets |
+| 8 | Billing & Checkout | Invoice, UPI QR / card / cash / EMI, bill sent on WhatsApp as a PDF with the review link, close the visit |
+| 9 | Payments | Ledger of everything received and still owed, with WhatsApp reminders |
+| 10 | Reviews | Ratings patients left themselves through the link in their bill |
 
 Plus **Dashboard**, **Reports**, **Roles & Access**, **Feature Requests**, **Subscription**
 and **Settings**.
@@ -80,8 +78,14 @@ which side-menu pages that role can even open.
 
 Saved to `localStorage` under one key, per browser and per origin. It survives refreshes,
 restarts and reboots. It is erased only by clearing site data, using a private window, or the
-*Settings → Data → Clear all data* button. `npm test` proves this — 21 assertions covering the
-save/load round trip, cross-tab safety and blocked-storage fallback.
+*Settings → Data → Clear all data* button. `npm test` proves this — storage round trip, cross-tab
+safety and blocked-storage fallback, plus the store rules (no duplicate check-ins, one invoice
+number per visit, balance carried once), the PDF bill's contents, and every route rendering.
+
+**The WhatsApp bill.** On a phone, *Send on WhatsApp* opens the share sheet with the PDF attached
+and the caption filled in. On a desktop the PDF downloads and the chat opens — WhatsApp's links
+cannot attach files, so the PDF is dragged in. The caption and the PDF both carry the patient's
+review link (`/r/<visit>`): 4★+ goes to Google, 3★ or less stays private with the clinic.
 
 Two limits while there is no backend: data does not follow you between devices or browsers, and
 a patient scanning the QR on their own phone writes to *their* storage, not your dashboard.

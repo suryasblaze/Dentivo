@@ -23,7 +23,20 @@ export const shortDate = (iso) => {
 export const nowTime = () =>
   new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
 
-export const todayISO = () => new Date().toISOString().slice(0, 10)
+/* The LOCAL calendar date as YYYY-MM-DD. toISOString() is UTC, which in India
+   reports yesterday's date between midnight and 5:30 am. */
+export const localISO = (d = new Date()) => {
+  const t = new Date(d)
+  t.setMinutes(t.getMinutes() - t.getTimezoneOffset())
+  return t.toISOString().slice(0, 10)
+}
+export const todayISO = () => localISO()
+
+/* "HH:MM" for the current local time, used to stop booking in the past */
+export const nowHM = () => {
+  const d = new Date()
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
 
 export const todayLong = () =>
   new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })

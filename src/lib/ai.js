@@ -11,6 +11,8 @@
    and change ENDPOINT below to that route. Nothing else here needs to change.
    ========================================================================= */
 
+import { localISO } from './format'
+
 const ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions'
 
 export const GROQ_MODELS = [
@@ -36,7 +38,7 @@ export function buildContext(db) {
   const money = (n) => Math.round(Number(n) || 0)
 
   return {
-    today: new Date().toISOString().slice(0, 10),
+    today: localISO(),
     currency: 'INR',
     clinic: {
       name: clinic?.name, branch: clinic?.branch, phone: clinic?.phone,

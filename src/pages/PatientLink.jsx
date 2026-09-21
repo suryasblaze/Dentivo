@@ -3,6 +3,7 @@ import { Card, Badge, Eyebrow, Tile, DataRow, Blank } from '../components/UI'
 import { QRCode } from '../components/Visuals'
 import { useClinic } from '../store/ClinicStore'
 import { IconQr, IconCheck, IconPrint, IconArrowUpRight, IconPhone, IconFile } from '../lib/icons'
+import { localISO } from '../lib/format'
 
 export default function PatientLink() {
   const { clinic, submissions, toast } = useClinic()
@@ -16,7 +17,7 @@ export default function PatientLink() {
     setTimeout(() => setCopied(false), 1800)
   }
 
-  const todaySubs = submissions.filter(s => s.date === new Date().toISOString().slice(0, 10))
+  const todaySubs = submissions.filter(s => s.date === localISO())
 
   return (
     <>

@@ -5,18 +5,19 @@ import {
   LineChart, RankList, Donut, Ring, Blank, MetricBar,
 } from '../components/UI'
 import { useClinic } from '../store/ClinicStore'
-import { inr, inrShort, greeting, todayLong, prettyDate } from '../lib/format'
+import { inr, inrShort, greeting, todayLong, prettyDate, localISO } from '../lib/format'
 import {
   IconQr, IconFile, IconUsers, IconCalendar, IconQueue, IconRupee, IconStar,
   IconArrowRight, IconPlus, IconCheck, IconTooth, IconReceipt, IconAlert,
 } from '../lib/icons'
+import { stagePath } from '../data/config'
 
 const last7 = () => {
   const out = []
   for (let i = 6; i >= 0; i--) {
     const d = new Date()
     d.setDate(d.getDate() - i)
-    out.push({ iso: d.toISOString().slice(0, 10), label: d.toLocaleDateString('en-IN', { weekday: 'short' }).slice(0, 2) })
+    out.push({ iso: localISO(d), label: d.toLocaleDateString('en-IN', { weekday: 'short' }).slice(0, 2) })
   }
   return out
 }
@@ -24,7 +25,7 @@ const last7 = () => {
 export default function Dashboard() {
   const { user, clinic, patients, submissions, appointments, visits, dispatch, toast } = useClinic()
   const nav = useNavigate()
-  const today = new Date().toISOString().slice(0, 10)
+  const today = localISO()
 
   /* ---------- everything below is computed from real entered data ---------- */
   const days = last7()
@@ -99,7 +100,7 @@ export default function Dashboard() {
               ['green', IconQr, '1 · Share the link', 'Open the QR page and let a patient fill their details', '/link'],
               ['blue', IconFile, '2 · Check submissions', 'Turn a submission into a patient record', '/submissions'],
               ['violet', IconQueue, '3 · Check them in', 'Scheduled or straight walk-in', '/checkin'],
-              ['amber', IconReceipt, '4 · Treat and bill', 'Consultation → treatment → billing → payment', '/consultation'],
+              ['amber', IconReceipt, '4 · Treat and bill', 'Consultation → treatment → checkout', '/consultation'],
             ].map(([tone, Icon, t, d, to]) => (
               <button key={t} className="card" style={{ textAlign: 'left', padding: 12 }} onClick={() => nav(to)}>
                 <Tile tone={tone}><Icon size={13} /></Tile>
@@ -217,7 +218,7 @@ export default function Dashboard() {
               {inClinic.map(v => {
                 const p = patients.find(x => x.id === v.patientId)
                 return (
-                  <DataRow key={v.id} onClick={() => { dispatch({ type: 'SET_ACTIVE_VISIT', id: v.id }); nav('/' + v.stage) }}
+                  <DataRow key={v.id} onClick={() => { dispatch({ type: 'SET_ACTIVE_VISIT', id: v.id }); nav(stagePath(v.stage)) }}
                     lead={<Avatar name={p?.name} color="#197E65" size={24} />}
                     title={p?.name} sub={`${v.token} · ${v.reason || v.visitType}`}
                     trail={<Badge tone="green" dot>{v.stage}</Badge>} />

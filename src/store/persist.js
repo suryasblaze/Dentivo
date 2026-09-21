@@ -75,6 +75,24 @@ export function appendSubmission(sub) {
   } catch { return false }
 }
 
+/* Same append-only write, for a rating left on the review link. A patient
+   rating twice replaces their earlier rating rather than adding a second. */
+export function appendFeedback(fb) {
+  const ls = store()
+  if (!ls) return false
+  try {
+    const cur = readRaw() || {}
+    const next = {
+      ...cur,
+      feedback: [fb, ...(cur.feedback || []).filter(f => f.visitId !== fb.visitId)],
+      rev: Number(cur.rev || 0) + 1,
+    }
+    rev = next.rev
+    ls.setItem(KEY, JSON.stringify(next))
+    return true
+  } catch { return false }
+}
+
 export function clearAll() {
   const ls = store()
   if (!ls) return false

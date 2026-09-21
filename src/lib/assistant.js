@@ -11,12 +11,12 @@
      { text, list?, table?, note?, chips? }
    ========================================================================= */
 
-import { inr, prettyDate } from './format'
+import { inr, prettyDate, localISO } from './format'
 
-const todayISO = () => new Date().toISOString().slice(0, 10)
+const todayISO = () => localISO()
 const daysAgoISO = (n) => {
   const d = new Date(); d.setDate(d.getDate() - n)
-  return d.toISOString().slice(0, 10)
+  return localISO(d)
 }
 const paidOf = (v) => (v.payments || []).reduce((s, p) => s + Number(p.amount || 0), 0)
 const doneOf = (v) => (v.plan || []).filter(p => p.status === 'done')

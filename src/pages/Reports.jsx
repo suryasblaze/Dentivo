@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Card, Stat, Eyebrow, Blank, LineChart, RankList, Donut, Seg, Tile, DataRow, Ring } from '../components/UI'
 import { useClinic } from '../store/ClinicStore'
-import { inr, inrShort, prettyDate } from '../lib/format'
+import { inr, inrShort, prettyDate, localISO } from '../lib/format'
 import { IconChart, IconUsers, IconStar, IconFile } from '../lib/icons'
 
 const seriesDays = (n) => {
@@ -9,7 +9,7 @@ const seriesDays = (n) => {
   for (let i = n - 1; i >= 0; i--) {
     const d = new Date()
     d.setDate(d.getDate() - i)
-    out.push({ iso: d.toISOString().slice(0, 10), label: d.toLocaleDateString('en-IN', { day: 'numeric' }) })
+    out.push({ iso: localISO(d), label: d.toLocaleDateString('en-IN', { day: 'numeric' }) })
   }
   return out
 }

@@ -2,7 +2,8 @@ import React, { createContext, useContext, useReducer, useCallback, useMemo, use
 import { DEFAULT_CLINIC, DEFAULT_STAFF, DEFAULT_CHAIRS, VISIT_STAGES } from '../data/config'
 import { DEFAULT_ROLES, TRIAL_DAYS, planById, ALL_PERMISSIONS } from '../data/plans'
 import { ROLE_PAGES, ALL_PAGES, ALWAYS_ON } from '../data/nav'
-import { KEY, load, save, appendSubmission, setRev } from './persist'
+import { KEY, load, save, appendSubmission, appendFeedback, setRev } from './persist'
+import { localISO } from '../lib/format'
 
 /* ---------------------------------------------------------------
    The shape of a brand-new account. Empty of clinic data — every
@@ -16,12 +17,13 @@ const EMPTY = {
   roles: DEFAULT_ROLES.map(r => ({ ...r, pages: ROLE_PAGES[r.id] || ALL_PAGES })),
   subscription: {
     plan: 'trial',
-    startedAt: new Date().toISOString().slice(0, 10),
+    startedAt: localISO(),
     billing: 'monthly',
     status: 'trialing',
     invoices: [],
   },
   featureRequests: [],
+  feedback: [],      // ratings patients leave on the review link
   submissions: [],   // from the public link
   patients: [],
   appointments: [],
@@ -31,8 +33,59 @@ const EMPTY = {
   toasts: [],
 }
 
+/* ---------------------------------------------------------------
+   Repairs data saved by older versions, so nothing a clinic already
+   entered is lost when the app changes shape.
+   --------------------------------------------------------------- */
+const RETIRED_STAGES = ['payment', 'whatsapp', 'review']   // folded into billing
+
+export function migrate(s) {
+  let n = 0
+
+  /* The old double-check-in bug left several OPEN visits for one patient.
+     Keep the one that has work in it (or the newest); drop the empty copies —
+     they hold nothing, so nothing is lost. */
+  const isEmptyVisit = (v) =>
+    !(v.plan || []).length && !(v.payments || []).length &&
+    !Object.keys(v.teeth || {}).length && !(v.diagnosis || []).length && !v.invoice
+  const keep = new Set()
+  const byPatient = {}
+  ;(s.visits || []).forEach(v => {
+    if (v.stage === 'done') { keep.add(v.id); return }
+    ;(byPatient[v.patientId] = byPatient[v.patientId] || []).push(v)
+  })
+  Object.values(byPatient).forEach(list => {
+    const withWork = list.filter(v => !isEmptyVisit(v))
+    const winners = withWork.length ? withWork : [list[0]]   // list[0] is the newest
+    winners.forEach(v => keep.add(v.id))
+  })
+
+  const visits = (s.visits || [])
+    .filter(v => keep.has(v.id))
+    .map(v => (RETIRED_STAGES.includes(v.stage) ? { ...v, stage: 'billing' } : v))
+
+  return {
+    ...s,
+    feedback: s.feedback || [],
+    visits,
+    /* recount, since duplicates inflated each patient's visit count */
+    patients: (s.patients || []).map(p => ({ ...p, visits: visits.filter(v => v.patientId === p.id).length })),
+    appointments: (s.appointments || []).map(a => {
+      /* booked before the id fix: give it one */
+      let fixed = a.id ? a : { ...a, id: 'a_fix' + (n++) + Math.random().toString(36).slice(2, 6) }
+      /* the patient was checked in for it, but the missing id meant it never got marked */
+      if (fixed.status === 'scheduled') {
+        const v = visits.find(x => x.patientId === fixed.patientId && x.date === fixed.date && x.visitType === 'Scheduled appointment')
+        if (v) fixed = { ...fixed, status: 'arrived', visitId: v.id }
+      }
+      return fixed
+    }),
+    activeVisitId: keep.has(s.activeVisitId) ? s.activeVisitId : null,
+  }
+}
+
 const pad = (n, w = 4) => String(n).padStart(w, '0')
-const today = () => new Date().toISOString().slice(0, 10)
+const today = () => localISO()
 const now = () => new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
 const uid = (p) => p + Math.random().toString(36).slice(2, 9)
 
@@ -70,7 +123,7 @@ const blankVisit = (patientId, extra = {}) => ({
   ...extra,
 })
 
-function reducer(s, a) {
+export function reducer(s, a) {
   switch (a.type) {
     /* ---------- auth ---------- */
     case 'LOGIN': return { ...s, user: s.staff.find(x => x.id === a.id) || s.staff[0] }
@@ -85,6 +138,9 @@ function reducer(s, a) {
           date: today(), time: now(), status: 'new',
         }, ...s.submissions],
       }
+    case 'ADD_FEEDBACK':
+      return { ...s, feedback: [a.prebuilt, ...(s.feedback || []).filter(f => f.visitId !== a.prebuilt.visitId)] }
+
     case 'DISMISS_SUBMISSION':
       return { ...s, submissions: s.submissions.map(x => x.id === a.id ? { ...x, status: 'dismissed' } : x) }
 
@@ -118,8 +174,13 @@ function reducer(s, a) {
       return { ...s, patients: s.patients.filter(p => p.id !== a.id) }
 
     /* ---------- appointments ---------- */
-    case 'ADD_APPOINTMENT':
-      return { ...s, appointments: [...s.appointments, { id: uid('a'), status: 'scheduled', ...a.data }] }
+    case 'ADD_APPOINTMENT': {
+      /* id goes LAST: the booking form carries `id: undefined`, and spreading it
+         after the id used to wipe it — every appointment ended up with no id,
+         so check-in could never mark it arrived. */
+      const { id: _ignored, ...data } = a.data || {}
+      return { ...s, appointments: [...s.appointments, { status: 'scheduled', ...data, id: uid('a') }] }
+    }
     case 'UPDATE_APPOINTMENT':
       return { ...s, appointments: s.appointments.map(x => x.id === a.id ? { ...x, ...a.patch } : x) }
     case 'DELETE_APPOINTMENT':
@@ -127,6 +188,18 @@ function reducer(s, a) {
 
     /* ---------- visits (the workflow) ---------- */
     case 'CHECK_IN': {
+      /* One open visit per patient. A second click, a double tap, or a second
+         tab must reopen the existing visit, never create another. */
+      const open = s.visits.find(v => v.patientId === a.patientId && v.stage !== 'done')
+      if (open) {
+        return {
+          ...s,
+          activeVisitId: open.id,
+          appointments: a.appointmentId
+            ? s.appointments.map(x => x.id === a.appointmentId ? { ...x, status: 'arrived', visitId: open.id } : x)
+            : s.appointments,
+        }
+      }
       const n = s.seq.token + 1
       const v = blankVisit(a.patientId, { ...a.data, token: `T-${pad(n, 2)}` })
       return {
@@ -137,7 +210,7 @@ function reducer(s, a) {
         patients: s.patients.map(p => p.id === a.patientId
           ? { ...p, visits: (p.visits || 0) + 1, lastVisit: today() } : p),
         appointments: a.appointmentId
-          ? s.appointments.map(x => x.id === a.appointmentId ? { ...x, status: 'arrived' } : x)
+          ? s.appointments.map(x => x.id === a.appointmentId ? { ...x, status: 'arrived', visitId: v.id } : x)
           : s.appointments,
       }
     }
@@ -174,6 +247,16 @@ function reducer(s, a) {
       }
 
     case 'MAKE_INVOICE': {
+      /* Numbered once. Later calls (a discount change, a procedure ticked)
+         only refresh the amounts — they used to burn a new number each time. */
+      const current = s.visits.find(v => v.id === s.activeVisitId)
+      if (current?.invoice?.no) {
+        return {
+          ...s,
+          visits: s.visits.map(v => v.id === s.activeVisitId
+            ? { ...v, invoice: { ...v.invoice, ...a.invoice, no: v.invoice.no, date: v.invoice.date } } : v),
+        }
+      }
       const n = s.seq.invoice + 1
       return {
         ...s,
@@ -205,6 +288,33 @@ function reducer(s, a) {
         patients: s.patients.map(p => p.id === visit?.patientId ? { ...p, balance: (p.balance || 0) + due } : p),
       }
     }
+
+    /* Checkout: carry any unpaid amount to the patient's account, number the
+       receipt and close the visit — in one step, so it can only happen once. */
+    case 'FINISH_VISIT': {
+      const visit = s.visits.find(v => v.id === s.activeVisitId)
+      if (!visit || visit.stage === 'done') return s
+      const total = visit.invoice?.total || 0
+      const paid = (visit.payments || []).reduce((x, p) => x + Number(p.amount || 0), 0)
+      const due = Math.max(0, total - paid)
+      const n = s.seq.receipt + 1
+      return {
+        ...s,
+        seq: { ...s.seq, receipt: n },
+        visits: s.visits.map(v => v.id === visit.id
+          ? { ...v, stage: 'done', closedAt: now(), receiptNo: `RCP-${pad(n)}`, dueCarried: due } : v),
+        patients: s.patients.map(p => p.id === visit.patientId
+          ? { ...p, balance: (p.balance || 0) + due, teeth: { ...(p.teeth || {}), ...(visit.teeth || {}) } } : p),
+        activeVisitId: null,
+      }
+    }
+
+    case 'MARK_SENT':
+      return {
+        ...s,
+        visits: s.visits.map(v => v.id === (a.id || s.activeVisitId)
+          ? { ...v, whatsappSent: true, sentAt: now(), reviewRequested: true } : v),
+      }
 
     case 'CLOSE_VISIT': {
       const visit = s.visits.find(v => v.id === s.activeVisitId)
@@ -315,11 +425,13 @@ function reducer(s, a) {
 const Ctx = createContext(null)
 
 export function ClinicProvider({ children }) {
-  const [state, dispatch] = useReducer(reducer, undefined, () => load(EMPTY))
+  const [state, dispatch] = useReducer(reducer, undefined, () => migrate(load(EMPTY)))
 
-  /* The public intake page is read-mostly. It must never write the whole
-     store back, or a long-open tab would erase work done in the admin tab. */
-  const publicOnly = typeof window !== 'undefined' && window.location.pathname.startsWith('/intake')
+  /* Public pages (the intake form and the review link) are read-mostly. They
+     must never write the whole store back, or a long-open tab would erase work
+     done in the admin tab. They append their one record and nothing else. */
+  const publicOnly = typeof window !== 'undefined' &&
+    (window.location.pathname.startsWith('/intake') || window.location.pathname.startsWith('/r/'))
 
   useEffect(() => { if (!publicOnly) save(state) }, [state, publicOnly])
 
@@ -350,13 +462,27 @@ export function ClinicProvider({ children }) {
       id: 's' + Math.random().toString(36).slice(2, 9),
       ...data,
       at: new Date().toISOString(),
-      date: new Date().toISOString().slice(0, 10),
+      date: localISO(),
       time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
       status: 'new',
     }
     appendSubmission(sub)
     dispatch({ type: 'SUBMIT_INTAKE', data, prebuilt: sub })
     return sub
+  }, [])
+
+  /* Used by the patient-facing review page. Same append-only pattern. */
+  const submitFeedback = useCallback((data) => {
+    const fb = {
+      id: 'f' + Math.random().toString(36).slice(2, 9),
+      ...data,
+      at: new Date().toISOString(),
+      date: localISO(),
+      time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
+    }
+    appendFeedback(fb)
+    dispatch({ type: 'ADD_FEEDBACK', prebuilt: fb })
+    return fb
   }, [])
 
   const value = useMemo(() => {
@@ -407,13 +533,22 @@ export function ClinicProvider({ children }) {
     const allowedPages = role ? (role.pages || ALL_PAGES) : ALL_PAGES
     const canOpen = (pageKey) => !pageKey || allowedPages.includes(pageKey)
 
+    /* Everything downstream (dashboard, reports, DentiBot) reads a visit's rating
+       from `visits`. Patients now rate from their own link, so fold that in. */
+    const fbByVisit = new Map((state.feedback || []).map(f => [f.visitId, f]))
+    const visitsWithFeedback = state.visits.map(v => {
+      const f = fbByVisit.get(v.id)
+      return f ? { ...v, rating: f.rating, reviewRoute: f.rating >= 4 ? 'google' : 'private',
+                   privateFeedback: f.text || '', ratedAt: f.date } : v
+    })
+
     return {
-      ...state, dispatch, toast, visit, patient, nextStage, submitIntake,
+      ...state, visits: visitsWithFeedback, dispatch, toast, visit, patient, nextStage, submitIntake, submitFeedback,
       plan, sub, trialLeft, onTrial, trialOver, usage, can, hasFeature, role, canOpen, allowedPages,
       bill: { done, subtotal, discount, gstAmt, total, paid, due },
       isEmpty: state.patients.length === 0 && state.submissions.length === 0,
     }
-  }, [state, toast, submitIntake])
+  }, [state, toast, submitIntake, submitFeedback])
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

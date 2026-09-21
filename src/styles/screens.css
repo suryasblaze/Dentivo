@@ -980,3 +980,15 @@ button.user-chip:hover { background: var(--canvas); }
 .ai-turn > img { margin-top: 2px; }
 .ai-turn .ai-msg { max-width: 100%; align-self: flex-start; }
 .ai-panel.full .ai-turn { max-width: 88%; }
+
+/* past slots: visible so the day reads correctly, but not bookable */
+.seat.past {
+  min-height: 42px; border-radius: var(--r-sm); border: 1px dashed var(--line-2);
+  background: repeating-linear-gradient(135deg, var(--canvas) 0 6px, var(--surface) 6px 12px);
+  opacity: .55; cursor: not-allowed;
+}
+.cal-slot.past {
+  background: repeating-linear-gradient(135deg, var(--canvas) 0 5px, var(--surface) 5px 10px);
+  opacity: .5; cursor: not-allowed;
+}
+.cal-slot.past:hover { background: repeating-linear-gradient(135deg, var(--canvas) 0 5px, var(--surface) 5px 10px); border-color: var(--line-2); }

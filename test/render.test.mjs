@@ -23,9 +23,23 @@ globalThis.localStorage = new LS()
 
 /* seed a signed-in session so protected routes render their real page
    instead of bouncing to the login screen */
+/* and a patient mid-visit, so checkout, payments and reviews render with data */
+const TODAY = new Date().toISOString().slice(0, 10)
 localStorage.setItem('smileflow.v1', JSON.stringify({
   rev: 1,
   user: { id: 'u1', name: 'Clinic Admin', role: 'Owner', short: 'CA', color: '#197E65', roleId: 'r_admin' },
+  clinic: { name: 'Test Dental', upiId: 'test@upi', googlePlaceUrl: 'https://g.page/test/review' },
+  patients: [{ id: 'p1', uhid: 'P-0001', name: 'Surya Kumar', phone: '9976291294', balance: 0, visits: 1 }],
+  visits: [{
+    id: 'v1', patientId: 'p1', date: TODAY, stage: 'billing', token: 'T-01', arrivedAt: '10:00 am',
+    visitType: 'Walk-in', teeth: { 36: 'caries' }, diagnosis: ['Dental caries'], findings: [],
+    plan: [{ code: 'D0220', name: 'IOPA X-ray', price: 300, gst: 0, tooth: '36', status: 'done' }],
+    rx: [], payments: [{ mode: 'UPI', amount: 100, at: '10:30 am', ref: 'UTR1' }],
+    invoice: { no: 'INV-0001', date: TODAY, total: 300 }, discount: 0, whatsappSent: true, reviewRequested: true,
+  }],
+  feedback: [{ id: 'f1', visitId: 'v1', rating: 2, text: 'Waited too long', date: TODAY }],
+  appointments: [{ id: 'a1', patientId: 'p1', date: TODAY, time: '09:00', mins: 30, status: 'scheduled' }],
+  activeVisitId: 'v1',
 }))
 
 globalThis.window = {
@@ -43,8 +57,8 @@ Object.defineProperty(globalThis, 'navigator', {
 const ROUTES = [
   '/intake', '/dashboard', '/link', '/submissions', '/patients', '/appointments',
   '/checkin', '/consultation', '/treatment', '/billing', '/payment',
-  '/whatsapp', '/review', '/done', '/reports', '/settings',
-  '/roles', '/subscription', '/requests',
+  '/review', '/reports', '/settings', '/roles', '/subscription', '/requests',
+  '/r/v1?c=Test%20Dental&n=Surya&g=https%3A%2F%2Fg.page%2Ftest%2Freview',
 ]
 
 const entry = join(TMP, 'entry.jsx')
@@ -68,7 +82,7 @@ await build({
   platform: 'node',
   outfile: join(TMP, 'bundle.mjs'),
   loader: { '.png': 'dataurl', '.css': 'empty' },
-  external: ['react', 'react-dom', 'react-dom/server', 'react-router-dom'],
+  external: ['react', 'react-dom', 'react-dom/server', 'react-router-dom', 'jspdf'],
   jsx: 'automatic',
   logLevel: 'error',
 })

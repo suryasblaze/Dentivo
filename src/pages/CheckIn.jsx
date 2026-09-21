@@ -3,15 +3,15 @@ import { useNavigate } from 'react-router-dom'
 import { Card, Badge, Avatar, Eyebrow, Blank, Field, Chip, Tile, DataRow, Seg, ChipsWithOther } from '../components/UI'
 import { VisitStrip } from '../components/Layout'
 import { useClinic } from '../store/ClinicStore'
-import { VISIT_TYPES } from '../data/config'
+import { VISIT_TYPES, stagePath } from '../data/config'
 import { MEDICAL_FLAGS } from '../data/catalog'
-import { prettyDate } from '../lib/format'
+import { prettyDate, localISO, nowHM } from '../lib/format'
 import { IconQueue, IconCheck, IconAlert, IconArrowRight, IconCalendar, IconUsers, IconPlus } from '../lib/icons'
 
 export default function CheckIn() {
   const { patients, appointments, visits, staff, chairs, visit, dispatch, toast } = useClinic()
   const nav = useNavigate()
-  const todayISO = new Date().toISOString().slice(0, 10)
+  const todayISO = localISO()
   const [mode, setMode] = useState('scheduled')
   const [pick, setPick] = useState('')
   const [visitType, setVisitType] = useState('Walk-in')
@@ -21,11 +21,19 @@ export default function CheckIn() {
 
   const pt = (id) => patients.find(p => p.id === id)
   const doctors = staff.filter(s => ['Owner', 'Dentist'].includes(s.role))
-  const dueToday = appointments.filter(a => a.date === todayISO && a.status === 'scheduled')
+  const dueToday = appointments
+    .filter(a => a.date === todayISO && a.status === 'scheduled')
+    .sort((a, b) => a.time.localeCompare(b.time))
   const inClinic = visits.filter(v => v.stage !== 'done')
+  const openVisitOf = (patientId) => inClinic.find(v => v.patientId === patientId)
+  const late = (a) => a.time < nowHM()
 
   const checkInWalkIn = () => {
     const p = pt(pick)
+    if (openVisitOf(pick)) {
+      toast(`${p?.name} is already in the clinic`)
+      return
+    }
     dispatch({
       type: 'CHECK_IN', patientId: pick,
       data: { visitType, doctorId: doctorId || null, chairId: chairId || null, reason: reason || p?.issue || '' },
@@ -35,11 +43,17 @@ export default function CheckIn() {
   }
 
   const arrive = (a) => {
+    const already = openVisitOf(a.patientId)
     dispatch({
       type: 'CHECK_IN', patientId: a.patientId, appointmentId: a.id,
       data: { visitType: 'Scheduled appointment', reason: a.reason, doctorId: a.doctorId, chairId },
     })
-    toast(`${pt(a.patientId)?.name} checked in`)
+    toast(already ? `${pt(a.patientId)?.name} was already in — linked to that visit` : `${pt(a.patientId)?.name} checked in`)
+  }
+
+  const noShow = (a) => {
+    dispatch({ type: 'UPDATE_APPOINTMENT', id: a.id, patch: { status: 'no-show' } })
+    toast(`${pt(a.patientId)?.name} marked as no-show`)
   }
 
   return (
@@ -97,9 +111,17 @@ export default function CheckIn() {
                             </span>
                           }
                           sub={`${a.time} · ${a.reason || 'Consultation'}`}
-                          trail={<button className="btn btn-primary btn-sm" onClick={() => arrive(a)}>
-                            <IconCheck size={11} /> Check in
-                          </button>} />
+                          trail={
+                            <div className="row" style={{ gap: 5 }}>
+                              {late(a) && <Badge tone="amber">Late · was {a.time}</Badge>}
+                              {late(a) && (
+                                <button className="btn btn-ghost btn-sm" onClick={() => noShow(a)}>No-show</button>
+                              )}
+                              <button className="btn btn-primary btn-sm" onClick={() => arrive(a)}>
+                                <IconCheck size={11} /> Check in
+                              </button>
+                            </div>
+                          } />
                       )
                     })}
                   </div>
@@ -114,7 +136,9 @@ export default function CheckIn() {
                   <select className="select" value={pick} onChange={e => setPick(e.target.value)}>
                     <option value="">Select a patient…</option>
                     {patients.map(p => (
-                      <option key={p.id} value={p.id}>{p.name} — {p.phone}</option>
+                      <option key={p.id} value={p.id} disabled={!!openVisitOf(p.id)}>
+                        {p.name} — {p.phone}{openVisitOf(p.id) ? '  (already in clinic)' : ''}
+                      </option>
                     ))}
                   </select>
                 </Field>
@@ -215,7 +239,7 @@ export default function CheckIn() {
                   const isActive = visit?.id === v.id
                   return (
                     <DataRow key={v.id} on={isActive}
-                      onClick={() => { dispatch({ type: 'SET_ACTIVE_VISIT', id: v.id }); nav('/' + v.stage) }}
+                      onClick={() => { dispatch({ type: 'SET_ACTIVE_VISIT', id: v.id }); nav(stagePath(v.stage)) }}
                       lead={<Avatar name={p?.name} color="#197E65" size={26} />}
                       title={p?.name}
                       sub={`${v.token} · arrived ${v.arrivedAt} · ${v.visitType}`}

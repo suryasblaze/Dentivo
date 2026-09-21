@@ -5,7 +5,14 @@ import {
 } from '../components/UI'
 import { useClinic } from '../store/ClinicStore'
 import { ISSUES } from '../data/config'
-import { prettyDate } from '../lib/format'
+import { prettyDate, localISO, nowHM } from '../lib/format'
+
+/* A slot is in the past if its day has gone, or it is today and the time has gone. */
+const isPast = (date, time) => {
+  const today = localISO()
+  if (date < today) return true
+  return date === today && !!time && time <= nowHM()
+}
 import { openWhatsApp, apptMessage } from '../lib/links'
 import {
   IconPlus, IconCalendar, IconCheck, IconX, IconQueue, IconUsers, IconWhatsApp,
@@ -205,7 +212,9 @@ export default function Appointments() {
                     const key = iso(d)
                     const list = on(key).filter(a => a.time === t)
                     return (
-                      <button key={key + t} className={`cal-slot ${list.length ? 'has' : ''}`}
+                      <button key={key + t}
+                        className={`cal-slot ${list.length ? 'has' : ''} ${!list.length && isPast(key, t) ? 'past' : ''}`}
+                        disabled={!list.length && isPast(key, t)}
                         onClick={() => list.length
                           ? setOpenAppt(list[0])
                           : setBook({ date: key, time: t })}>
@@ -243,8 +252,10 @@ export default function Appointments() {
                   const a = on(iso(cursor)).find(x => x.time === t && (x.chairId || seats[0].id) === c.id)
                   if (!a) {
                     return (
-                      <button key={c.id + t} className="seat free"
-                        onClick={() => setBook({ date: iso(cursor), time: t, chairId: c.id })} />
+                      isPast(iso(cursor), t)
+                        ? <div key={c.id + t} className="seat past" title="This time has passed" />
+                        : <button key={c.id + t} className="seat free"
+                            onClick={() => setBook({ date: iso(cursor), time: t, chairId: c.id })} />
                     )
                   }
                   const p = pt(a.patientId)
@@ -402,21 +413,35 @@ export default function Appointments() {
 
 /* ========================================================================= */
 function BookModal({ init, patients, doctors, seats, slots, appointments, onClose, onSave }) {
+  const today = localISO()
+  const firstFree = (date) => slots.find(t => !isPast(date, t)) || slots[slots.length - 1]
+
+  /* never open the form on a time that has already gone */
+  const startDate = init.date < today ? today : init.date
+  const startTime = init.time && !isPast(startDate, init.time) ? init.time : firstFree(startDate)
+
   const [f, setF] = useState({
-    id: init.id, patientId: init.patientId || '', date: init.date, time: init.time,
+    id: init.id, patientId: init.patientId || '', date: startDate, time: startTime,
     mins: init.mins || 30, doctorId: init.doctorId || '', chairId: init.chairId || seats[0]?.id || '',
     reason: init.reason || '', status: init.status || 'scheduled',
   })
   const set = (k, v) => setF(s => ({ ...s, [k]: v }))
   const taken = (t) => appointments.some(a =>
     a.id !== f.id && a.date === f.date && a.time === t && a.chairId === f.chairId && a.status === 'scheduled')
+  const blocked = (t) => taken(t) || isPast(f.date, t)
+
+  const changeDate = (d) => {
+    const date = d < today ? today : d
+    setF(s => ({ ...s, date, time: isPast(date, s.time) ? firstFree(date) : s.time }))
+  }
+  const valid = f.patientId && !blocked(f.time)
 
   return (
     <Modal title={f.id ? 'Edit appointment' : 'Book an appointment'} onClose={onClose}
       footer={<>
         <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
         <div className="spacer" />
-        <button className="btn btn-primary" disabled={!f.patientId} onClick={() => onSave(f)}>
+        <button className="btn btn-primary" disabled={!valid} onClick={() => onSave(f)}>
           <IconCheck size={13} /> {f.id ? 'Save' : 'Book'}
         </button>
       </>}>
@@ -428,7 +453,7 @@ function BookModal({ init, patients, doctors, seats, slots, appointments, onClos
           </select>
         </Field>
         <Field label="Date">
-          <input className="input" type="date" value={f.date} onChange={e => set('date', e.target.value)} />
+          <input className="input" type="date" value={f.date} min={today} onChange={e => changeDate(e.target.value)} />
         </Field>
         <Field label="Duration">
           <select className="select" value={f.mins} onChange={e => set('mins', Number(e.target.value))}>
@@ -444,14 +469,19 @@ function BookModal({ init, patients, doctors, seats, slots, appointments, onClos
           </Field>
         )}
 
-        <Field label="Time" span={2} hint="Greyed slots are already taken on this chair">
+        <Field label="Time" span={2}
+          hint={f.date === today ? 'Times already gone today, and slots taken on this chair, are greyed out' : 'Greyed slots are already taken on this chair'}>
           <div className="chip-grid">
             {slots.map(t => (
-              <button key={t} className={`chip ${f.time === t ? 'on' : ''}`} disabled={taken(t)}
-                style={taken(t) ? { opacity: .35, cursor: 'not-allowed' } : undefined}
-                onClick={() => !taken(t) && set('time', t)}>{t}</button>
+              <button key={t} className={`chip ${f.time === t ? 'on' : ''}`} disabled={blocked(t)}
+                title={isPast(f.date, t) ? 'This time has passed' : taken(t) ? 'Already booked' : ''}
+                style={blocked(t) ? { opacity: .3, cursor: 'not-allowed', textDecoration: isPast(f.date, t) ? 'line-through' : 'none' } : undefined}
+                onClick={() => !blocked(t) && set('time', t)}>{t}</button>
             ))}
           </div>
+          {slots.every(t => blocked(t)) && (
+            <div className="badge amber" style={{ marginTop: 6 }}>No free slots left on this day — pick another date</div>
+          )}
         </Field>
 
         {doctors.length > 0 && (
