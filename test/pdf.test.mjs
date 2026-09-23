@@ -10,13 +10,13 @@ const posix = (p) => p.replace(/\\/g, '/')
 
 writeFileSync(join(TMP, 'entry.js'),
   `export { billPdf } from '${posix(join(process.cwd(), 'src/lib/pdf.js'))}'
-   export { billMessage, billLink, readBillLink, googleReviewUrl } from '${posix(join(process.cwd(), 'src/lib/links.js'))}'`)
+   export { billMessage, billLink, billLinkSync, readBillLink, googleReviewUrl, isLocalLink } from '${posix(join(process.cwd(), 'src/lib/links.js'))}'`)
 await build({
   entryPoints: [join(TMP, 'entry.js')], bundle: true, format: 'esm', platform: 'node',
   outfile: join(TMP, 'bundle.mjs'), external: ['jspdf'], logLevel: 'error',
 })
 globalThis.window = { location: { origin: 'https://dentivo.test' } }
-const { billPdf, billMessage, billLink, readBillLink, googleReviewUrl } = await import('file://' + posix(join(TMP, 'bundle.mjs')))
+const { billPdf, billMessage, billLink, billLinkSync, readBillLink, googleReviewUrl, isLocalLink } = await import('file://' + posix(join(TMP, 'bundle.mjs')))
 
 let pass = 0, fail = 0
 const ok = (n, c, got) => { c ? (pass++, console.log('  PASS  ' + n)) : (fail++, console.log('  FAIL  ' + n + (got !== undefined ? '   got: ' + got : ''))) }
@@ -35,20 +35,24 @@ const bill = { done: [{ name: 'IOPA X-ray (single)', tooth: '36', price: 300 }],
 const hashOf = (url) => url.slice(url.indexOf('#'))
 
 console.log('\n1. The bill link')
-const link = billLink({ clinic, patient, visit, bill, askReview: true })
+const link = await billLink({ clinic, patient, visit, bill, askReview: true })
 ok('points at /b/<visit id>#…', link.startsWith('https://dentivo.test/b/v1#'), link.slice(0, 40))
-ok('fits comfortably in a WhatsApp message', link.length < 1500, link.length + ' chars')
-const back = readBillLink(hashOf(link))
+const plain = billLinkSync({ clinic, patient, visit, bill, askReview: true })
+ok('compressed link is much shorter than the raw one', link.length < plain.length * 0.75, `${link.length} vs ${plain.length} chars`)
+ok('fits comfortably in a WhatsApp message', link.length < 1200, link.length + ' chars')
+const back = await readBillLink(hashOf(link))
 ok('decodes back to the same bill',
   back && back.bill.total === 300 && back.bill.due === 200 && back.bill.done[0].name === 'IOPA X-ray (single)',
   JSON.stringify(back?.bill))
 ok('carries the prescription and next visit', back?.visit.rx[0].name === 'Amoxicillin 500mg' && back?.visit.nextVisit === 'In 1 week')
 ok('carries the UPI ID and Google link', back?.clinic.upiId === 'sree@okaxis' && back?.clinic.google === GOOGLE)
 ok('review flag survives both ways',
-  back?.askReview === true && readBillLink(hashOf(billLink({ clinic, patient, visit, bill, askReview: false }))).askReview === false)
-const tamil = readBillLink(hashOf(billLink({ clinic: { ...clinic, name: 'ஸ்ரீ பல் மருத்துவமனை' }, patient, visit, bill })))
+  back?.askReview === true && (await readBillLink(hashOf(await billLink({ clinic, patient, visit, bill, askReview: false })))).askReview === false)
+ok('an uncompressed link still opens', (await readBillLink(hashOf(plain)))?.bill.total === 300)
+const tamil = await readBillLink(hashOf(await billLink({ clinic: { ...clinic, name: 'ஸ்ரீ பல் மருத்துவமனை' }, patient, visit, bill })))
 ok('Tamil text survives the round trip', tamil?.clinic.name === 'ஸ்ரீ பல் மருத்துவமனை', tamil?.clinic.name)
-ok('a cut-off link returns null, not a crash', readBillLink('#eyJ2IjoxLCJj') === null)
+ok('a cut-off link returns null, not a crash', (await readBillLink('#jeyJ2IjoxLCJj')) === null && (await readBillLink('#zBROKEN')) === null)
+ok('a localhost link is spotted', isLocalLink('http://localhost:5199/b/v1#x') && !isLocalLink('https://dentivo.vercel.app/b/v1#x'))
 ok('a bare Place ID becomes a write-review link',
   googleReviewUrl({ googlePlaceUrl: 'ChIJN1t_tDeuEmsRUsoyG83frY4' }) ===
   'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4')

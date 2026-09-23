@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useLocation, useParams } from 'react-router-dom'
 import { useClinic } from '../store/ClinicStore'
 import { LogoMark } from '../components/Logo'
@@ -22,7 +22,9 @@ export default function PublicBill() {
   const { id } = useParams()
   const { hash } = useLocation()
   const { submitFeedback } = useClinic()
-  const data = useMemo(() => readBillLink(hash), [hash])
+  /* the bill is compressed inside the link, so unpacking it is async */
+  const [data, setData] = useState(undefined)
+  useEffect(() => { let on = true; readBillLink(hash).then(d => on && setData(d)); return () => { on = false } }, [hash])
 
   const [rating, setRating] = useState(0)
   const [hover, setHover] = useState(0)
@@ -31,6 +33,10 @@ export default function PublicBill() {
   const [note, setNote] = useState('')
   const [noteSent, setNoteSent] = useState(false)
   const [pdfBusy, setPdfBusy] = useState(false)
+
+  if (data === undefined) {
+    return <div className="pub"><div className="pub-card" style={{ textAlign: 'center' }}>Opening your bill…</div></div>
+  }
 
   if (!data) {
     return (

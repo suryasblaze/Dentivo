@@ -62,56 +62,92 @@ export function googleReviewUrl(clinic) {
 /* ---------- The bill link ----------
    The patient's phone has none of the clinic's data, so the bill travels
    inside the link, after the # — the part of a URL that browsers never send
-   to any server. With a backend this becomes a short random token instead. */
-const toB64 = (str) => {
-  const bytes = new TextEncoder().encode(str)
+   to any server. It is squeezed first: empty fields are dropped and the rest
+   is deflate-compressed, which roughly halves the link.
+
+   With a backend this becomes a short token (/b/x7k2p) and the bill is
+   looked up on the server, which is the right answer for production. */
+const b64 = (bytes) => {
   let bin = ''
   bytes.forEach(b => { bin += String.fromCharCode(b) })
   return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
-const fromB64 = (b64) => {
-  const bin = atob(b64.replace(/-/g, '+').replace(/_/g, '/'))
-  return new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0)))
+const unb64 = (s) => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0))
+
+const squeeze = async (bytes) => {
+  if (typeof CompressionStream === 'undefined') return null
+  const stream = new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate-raw'))
+  return new Uint8Array(await new Response(stream).arrayBuffer())
+}
+const unsqueeze = async (bytes) => {
+  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'))
+  return new Uint8Array(await new Response(stream).arrayBuffer())
 }
 
+/* only what the bill page and the PDF actually show — empty fields cost
+   characters in the link, so they are left out entirely */
 export function billPayload({ clinic, patient, visit, bill, askReview }) {
-  return {
+  const keep = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) =>
+    v !== '' && v !== undefined && v !== null && !(Array.isArray(v) && !v.length)))
+  return keep({
     v: 1,
-    c: { n: clinic?.name, a: clinic?.address, p: clinic?.phone, g: clinic?.gstin, u: clinic?.upiId, r: googleReviewUrl(clinic) },
-    p: { n: patient?.name, id: patient?.uhid },
-    i: { no: visit?.invoice?.no, d: visit?.invoice?.date || visit?.date, t: visit?.token, rs: visit?.reason },
+    c: keep({ n: clinic?.name, a: clinic?.address, p: clinic?.phone, g: clinic?.gstin, u: clinic?.upiId, r: googleReviewUrl(clinic) }),
+    p: keep({ n: patient?.name, id: patient?.uhid }),
+    i: keep({ no: visit?.invoice?.no, d: visit?.invoice?.date || visit?.date, t: visit?.token, rs: visit?.reason }),
     l: (bill?.done || []).map(x => [x.name, x.tooth && x.tooth !== '—' ? x.tooth : '', Number(x.price) || 0]),
     m: [bill?.subtotal, bill?.discount, bill?.gstAmt, bill?.total, bill?.paid, bill?.due].map(n => Number(n) || 0),
     pay: (visit?.payments || []).map(x => [x.mode, Number(x.amount) || 0]),
     rx: (visit?.rx || []).map(d => [d.name, d.dose, d.days]),
     nx: visit?.nextVisit || '',
     ask: askReview ? 1 : 0,
-  }
+  })
 }
 
-export function billLink(args) {
+const origin = () => (typeof window !== 'undefined' ? window.location.origin : '')
+
+/* A link that only works on this computer is the usual reason a demo link
+   "does nothing" on a phone. */
+export const isLocalLink = (url) => /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])/i.test(String(url || ''))
+
+/* compressed — what actually gets sent */
+export async function billLink(args) {
   const id = args?.visit?.id
   if (!id) return ''
-  const origin = typeof window !== 'undefined' ? window.location.origin : ''
-  return `${origin}/b/${id}#${toB64(JSON.stringify(billPayload(args)))}`
+  const json = new TextEncoder().encode(JSON.stringify(billPayload(args)))
+  const small = await squeeze(json).catch(() => null)
+  const body = small && small.length < json.length ? 'z' + b64(small) : 'j' + b64(json)
+  return `${origin()}/b/${id}#${body}`
 }
 
-/* Back to the shapes billPdf() and the bill page use. Null if the link was cut short. */
-export function readBillLink(hash) {
+/* uncompressed — for anywhere a link is needed without waiting */
+export function billLinkSync(args) {
+  const id = args?.visit?.id
+  if (!id) return ''
+  return `${origin()}/b/${id}#j${b64(new TextEncoder().encode(JSON.stringify(billPayload(args))))}`
+}
+
+/* Back to the shapes billPdf() and the bill page use. Null if the link was
+   cut short, which is what a half-copied link looks like. */
+export async function readBillLink(hash) {
   try {
-    const d = JSON.parse(fromB64(String(hash || '').replace(/^#/, '')))
+    const raw = String(hash || '').replace(/^#/, '')
+    const kind = raw[0] === 'z' || raw[0] === 'j' ? raw[0] : 'j'
+    const body = raw[0] === 'z' || raw[0] === 'j' ? raw.slice(1) : raw
+    const bytes = unb64(body)
+    const json = new TextDecoder().decode(kind === 'z' ? await unsqueeze(bytes) : bytes)
+    const d = JSON.parse(json)
     if (d?.v !== 1) return null
-    const [subtotal, discount, gstAmt, total, paid, due] = d.m
+    const [subtotal, discount, gstAmt, total, paid, due] = d.m || []
     return {
-      clinic: { name: d.c.n, address: d.c.a, phone: d.c.p, gstin: d.c.g, upiId: d.c.u, google: d.c.r },
-      patient: { name: d.p.n, uhid: d.p.id },
+      clinic: { name: d.c?.n, address: d.c?.a, phone: d.c?.p, gstin: d.c?.g, upiId: d.c?.u, google: d.c?.r },
+      patient: { name: d.p?.n, uhid: d.p?.id },
       visit: {
-        invoice: { no: d.i.no, date: d.i.d }, date: d.i.d, token: d.i.t, reason: d.i.rs,
-        payments: d.pay.map(([mode, amount]) => ({ mode, amount })),
-        rx: d.rx.map(([name, dose, days]) => ({ name, dose, days })),
-        nextVisit: d.nx,
+        invoice: { no: d.i?.no, date: d.i?.d }, date: d.i?.d, token: d.i?.t, reason: d.i?.rs,
+        payments: (d.pay || []).map(([mode, amount]) => ({ mode, amount })),
+        rx: (d.rx || []).map(([name, dose, days]) => ({ name, dose, days })),
+        nextVisit: d.nx || '',
       },
-      bill: { done: d.l.map(([name, tooth, price]) => ({ name, tooth, price })), subtotal, discount, gstAmt, total, paid, due },
+      bill: { done: (d.l || []).map(([name, tooth, price]) => ({ name, tooth, price })), subtotal, discount, gstAmt, total, paid, due },
       askReview: !!d.ask,
     }
   } catch {

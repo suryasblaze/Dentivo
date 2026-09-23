@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Card, Stat, Badge, Avatar, Eyebrow, Blank, Seg, Tile, DataRow, Ring } from '../components/UI'
 import { useClinic } from '../store/ClinicStore'
 import { prettyDate } from '../lib/format'
-import { openWhatsApp, billLink } from '../lib/links'
+import { waLink, billLink } from '../lib/links'
 import { billOf } from '../lib/bill'
 import { IconStar, IconWhatsApp, IconAlert, IconCheck, IconSettings, IconGoogleG, IconClock } from '../lib/icons'
 
@@ -38,11 +38,19 @@ export default function Reviews() {
 
   const nudge = (v) => {
     const p = pt(v.patientId)
-    const first = (p?.name || '').split(' ')[0]
-    const link = billLink({ clinic, patient: p, visit: v, bill: billOf(v), askReview: true })
-    const ok = openWhatsApp(p?.phone,
-      `Hello ${first}, thank you again for visiting *${clinic.name}*. If you have a moment, tell us how we did. It takes 10 seconds:\n\n${link}`)
-    toast(ok ? 'Reminder opened in WhatsApp' : 'No mobile number saved')
+    if (!p?.phone) return toast('No mobile number saved')
+    const first = (p.name || '').split(' ')[0]
+    const tab = window.open('', '_blank', 'noopener')      // opened inside the click, filled in after
+    billLink({ clinic, patient: p, visit: v, bill: billOf(v), askReview: true }).then(link => {
+      const url = waLink(p.phone, [
+        `Hello ${first}, thank you again for visiting *${clinic.name}*.`,
+        'If you have a moment, tell us how we did. It takes 10 seconds:',
+        link,
+      ].join('\n\n'))
+      if (tab) tab.location.href = url
+      else window.open(url, '_blank', 'noopener')
+    })
+    toast('Reminder opened in WhatsApp')
   }
 
   return (
