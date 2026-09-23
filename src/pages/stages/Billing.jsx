@@ -6,7 +6,7 @@ import CollectPayment from '../../components/CollectPayment'
 import NoVisit from './NoVisit'
 import { useClinic } from '../../store/ClinicStore'
 import { inr, prettyDate } from '../../lib/format'
-import { billMessage, billLink, googleReviewUrl, downloadBlob, waLink, isLocalLink } from '../../lib/links'
+import { billMessage, billLink, billLinkSync, googleReviewUrl, downloadBlob, openWhatsApp, isLocalLink } from '../../lib/links'
 import { treatmentComplete } from '../../lib/bill'
 import {
   IconReceipt, IconArrowRight, IconAlert, IconWhatsApp, IconCheck, IconFile,
@@ -29,6 +29,7 @@ export default function Billing() {
   const { visit, patient, clinic, bill, dispatch, toast } = useClinic()
   const nav = useNavigate()
   const [askReview, setAskReview] = useState(null)   // null = follow the treatment plan
+  const [link, setLink] = useState('')               // built ahead of the click
 
   /* keep the invoice amounts current; the number itself is issued once */
   useEffect(() => {
@@ -38,6 +39,19 @@ export default function Billing() {
       invoice: { subtotal: bill.subtotal, discount: bill.discount, gst: bill.gstAmt, total: bill.total },
     })
   }, [visit?.id, bill.subtotal, bill.discount, bill.gstAmt])
+
+  /* Squeezing the bill into the link is asynchronous, so it is prepared here,
+     before anyone clicks Send. Hooks must run on every render, so this sits
+     above the early return below. */
+  useEffect(() => {
+    if (!visit || !patient) return undefined
+    let live = true
+    const wantReview = askReview ?? treatmentComplete(visit)
+    billLink({ clinic, patient, visit, bill, askReview: wantReview })
+      .then(l => { if (live) setLink(l) })
+      .catch(() => { if (live) setLink('') })
+    return () => { live = false }
+  }, [visit, patient, bill.total, bill.paid, bill.due, askReview, clinic])
 
   if (!visit || !patient) return <NoVisit stage="Billing & Checkout" />
 
@@ -54,19 +68,13 @@ export default function Billing() {
   }
 
   /* One message, one link: bill + PDF + (when treatment is finished) review.
-     The window is opened first, while we are still inside the click, and the
-     address filled in once the link is built — otherwise the browser treats
-     it as a pop-up and blocks it. */
+     Compressing the bill into the link is asynchronous, so it is prepared
+     while the screen sits there — the click itself stays instant. */
   const send = () => {
-    if (!patient.phone) return false
-    const tab = window.open('', '_blank', 'noopener')
-    billLink({ clinic, patient, visit, bill, askReview: ask }).then(link => {
-      const url = waLink(patient.phone, billMessage({ clinic, patient, visit, bill, link, askReview: ask }))
-      if (tab) tab.location.href = url
-      else window.open(url, '_blank', 'noopener')
-    })
-    dispatch({ type: 'MARK_SENT', id: visit.id, review: ask })
-    return true
+    const url = link || billLinkSync({ clinic, patient, visit, bill, askReview: ask })
+    const ok = openWhatsApp(patient.phone, billMessage({ clinic, patient, visit, bill, link: url, askReview: ask }))
+    if (ok) dispatch({ type: 'MARK_SENT', id: visit.id, review: ask })
+    return ok
   }
 
   const finish = (andSend) => {
