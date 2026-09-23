@@ -6,10 +6,11 @@ import CollectPayment from '../../components/CollectPayment'
 import NoVisit from './NoVisit'
 import { useClinic } from '../../store/ClinicStore'
 import { inr, prettyDate } from '../../lib/format'
-import { billMessage, reviewUrl, shareBill, downloadBlob, openWhatsApp } from '../../lib/links'
+import { billMessage, billLink, googleReviewUrl, downloadBlob, openWhatsApp } from '../../lib/links'
+import { treatmentComplete } from '../../lib/bill'
 import {
   IconReceipt, IconArrowRight, IconAlert, IconWhatsApp, IconCheck, IconFile,
-  IconStar, IconDownload, IconHeart, IconRx,
+  IconStar, IconDownload, IconRx,
 } from '../../lib/icons'
 
 const DISCOUNTS = [
@@ -27,7 +28,7 @@ const DISCOUNTS = [
 export default function Billing() {
   const { visit, patient, clinic, bill, dispatch, toast } = useClinic()
   const nav = useNavigate()
-  const [sending, setSending] = useState(false)
+  const [askReview, setAskReview] = useState(null)   // null = follow the treatment plan
 
   /* keep the invoice amounts current; the number itself is issued once */
   useEffect(() => {
@@ -42,45 +43,37 @@ export default function Billing() {
 
   const closed = visit.stage === 'done'
   const pctOf = (p) => Math.round(bill.subtotal * (p / 100))
-  const review = reviewUrl({ visit, patient, clinic })
+  const google = googleReviewUrl(clinic)
+  const complete = treatmentComplete(visit)
+  const ask = askReview ?? complete
 
-  /* jsPDF is ~400 KB, so it is fetched only when a bill is actually sent or
-     downloaded — never on the patient's phone when they open the QR form. */
   const buildPdf = async () => {
+    /* jsPDF is ~400 KB, so it loads only when someone actually wants a PDF */
     const { billPdf } = await import('../../lib/pdf')
-    return billPdf({ clinic, patient, visit, bill, reviewUrl: review })
+    return billPdf({ clinic, patient, visit, bill, reviewUrl: ask ? google : '' })
   }
 
-  const sendBill = async () => {
-    if (!patient.phone) return toast('No mobile number saved for this patient')
-    setSending(true)
-    try {
-      const { blob, file } = await buildPdf()
-      const text = billMessage({ clinic, patient, visit, bill, review })
-      const how = await shareBill({ blob, file, text, phone: patient.phone })
-      if (how === 'cancelled') return toast('Not sent')
-      dispatch({ type: 'MARK_SENT', id: visit.id })
-      toast(how === 'shared'
-        ? 'Bill shared — pick the patient in WhatsApp'
-        : 'PDF downloaded and chat opened — drag the PDF into it')
-    } catch (e) {
-      toast('Could not build the PDF')
-    } finally {
-      setSending(false)
-    }
+  /* one message, one link: bill + PDF + (when treatment is finished) review */
+  const send = () => {
+    const link = billLink({ clinic, patient, visit, bill, askReview: ask })
+    const ok = openWhatsApp(patient.phone, billMessage({ clinic, patient, visit, bill, link, askReview: ask }))
+    if (ok) dispatch({ type: 'MARK_SENT', id: visit.id, review: ask })
+    return ok
   }
 
-  const textOnly = () => {
-    const ok = openWhatsApp(patient.phone, billMessage({ clinic, patient, visit, bill, review }))
-    if (ok) dispatch({ type: 'MARK_SENT', id: visit.id })
-    toast(ok ? 'Chat opened with the bill summary' : 'No mobile number saved for this patient')
-  }
-
-  const finish = () => {
+  const finish = (andSend) => {
+    const sent = andSend ? send() : false
     dispatch({ type: 'FINISH_VISIT' })
-    toast(bill.due > 0 ? `Visit closed · ${inr(bill.due)} carried to ${patient.name.split(' ')[0]}'s account` : 'Visit closed')
+    const first = patient.name.split(' ')[0]
+    toast([
+      'Visit closed',
+      bill.due > 0 ? `${inr(bill.due)} carried to ${first}'s account` : '',
+      andSend ? (sent ? 'bill sent on WhatsApp' : 'no mobile number — bill not sent') : '',
+    ].filter(Boolean).join(' · '))
     nav('/checkin')
   }
+
+  const resend = () => toast(send() ? 'Bill link opened in WhatsApp' : 'No mobile number saved for this patient')
 
   return (
     <>
@@ -230,55 +223,63 @@ export default function Billing() {
         <div className="col" style={{ gap: 10 }}>
           {bill.done.length > 0 && <CollectPayment locked={closed} />}
 
-          <Card title="Send to patient" sub={visit.whatsappSent ? `Sent at ${visit.sentAt || '—'}` : 'On WhatsApp'}>
-            <div style={{ margin: '0 -9px 10px' }}>
+          <Card title={closed ? 'Bill sent to patient' : 'Finish & send'}
+            sub={visit.whatsappSent ? `Sent on WhatsApp at ${visit.sentAt || '—'}` : 'One WhatsApp message, one link'}>
+            <div style={{ margin: '0 -9px 8px' }}>
               <DataRow lead={<Tile tone="blue"><IconFile size={12} /></Tile>}
-                title="Bill as a PDF" sub={`${visit.invoice?.no || 'Invoice'} · itemised, with payments`} />
-              <DataRow lead={<Tile tone="green"><IconWhatsApp size={12} color="currentColor" /></Tile>}
-                title="Short description" sub="Treatment, total, paid, balance" />
+                title="Bill page + PDF download" sub={`${visit.invoice?.no || 'Invoice'} · items, payments${bill.due > 0 ? ', UPI to pay the balance' : ''}`} />
               {(visit.rx || []).length > 0 && (
                 <DataRow lead={<Tile tone="violet"><IconRx size={12} /></Tile>}
-                  title="Prescription" sub={`${visit.rx.length} medicine${visit.rx.length > 1 ? 's' : ''}`} />
+                  title="Prescription" sub={`${visit.rx.length} medicine${visit.rx.length > 1 ? 's' : ''}${visit.nextVisit ? ` · next visit ${visit.nextVisit}` : ''}`} />
               )}
-              <DataRow lead={<Tile tone="amber"><IconStar size={12} /></Tile>}
-                title="Review link" sub={clinic.googlePlaceUrl ? 'Opens a 10-second rating, then Google' : 'Rating page — add your Google link in Settings'} />
             </div>
 
-            <button className="btn btn-primary btn-lg btn-block" disabled={!bill.done.length || sending} onClick={sendBill}>
-              <IconWhatsApp size={15} color="currentColor" />
-              {sending ? 'Preparing…' : visit.whatsappSent ? 'Send again' : 'Send bill on WhatsApp'}
-            </button>
-            <button className="btn btn-ghost btn-sm btn-block" style={{ marginTop: 6 }}
-              disabled={!bill.done.length} onClick={textOnly}>
-              Send text only, without the PDF
-            </button>
+            {!closed && (
+              <label className={`rv-toggle ${ask ? 'on' : ''}`}>
+                <input type="checkbox" checked={ask} onChange={e => setAskReview(e.target.checked)} />
+                <IconStar size={13} filled={ask} />
+                <span>
+                  <b>Ask for a Google review</b>
+                  <small>
+                    {complete
+                      ? (google ? 'Treatment finished — a good moment to ask' : 'Add your Google review link in Settings first')
+                      : 'Off: treatment is still in progress. Ask after the last sitting.'}
+                  </small>
+                </span>
+              </label>
+            )}
 
+            {!closed && bill.due > 0 && bill.total > 0 && (
+              <div className="lrow" style={{ margin: '8px 0 0', background: 'var(--a-amber-bg)', borderColor: 'rgba(200,134,13,.25)' }}>
+                <IconAlert size={14} style={{ color: 'var(--a-amber)' }} />
+                <span style={{ fontSize: 'var(--fs-sm)' }}>
+                  {inr(bill.due)} unpaid will be carried to {patient.name.split(' ')[0]}&apos;s account.
+                  The bill page shows a UPI button for it.
+                </span>
+              </div>
+            )}
+
+            <div style={{ height: 10 }} />
+            {closed ? (
+              <button className="btn btn-primary btn-block" onClick={resend}>
+                <IconWhatsApp size={14} color="currentColor" /> {visit.whatsappSent ? 'Send the bill again' : 'Send bill on WhatsApp'}
+              </button>
+            ) : (
+              <>
+                <button className="btn btn-primary btn-lg btn-block" disabled={!bill.done.length} onClick={() => finish(true)}>
+                  <IconWhatsApp size={15} color="currentColor" /> Finish & send bill <IconArrowRight size={13} />
+                </button>
+                <button className="btn btn-ghost btn-sm btn-block" style={{ marginTop: 6 }}
+                  disabled={!bill.done.length} onClick={() => finish(false)}>
+                  Finish without sending
+                </button>
+              </>
+            )}
             <p className="faint" style={{ fontSize: 'var(--fs-micro)', lineHeight: 1.5, marginTop: 8 }}>
-              On a phone, or Chrome on Windows and Mac, this opens the share sheet with the PDF
-              attached — pick WhatsApp, then the patient. Where files cannot be shared, the PDF
-              downloads and the chat opens with the message ready; drag the PDF in.
+              Closing saves today&apos;s charting to the patient record and frees the chair.
+              Nothing is deleted.
             </p>
           </Card>
-
-          {!closed && (
-            <Card title="Finish the visit">
-              {bill.due > 0 && bill.total > 0 && (
-                <div className="lrow" style={{ marginBottom: 10, background: 'var(--a-amber-bg)', borderColor: 'rgba(200,134,13,.25)' }}>
-                  <IconAlert size={14} style={{ color: 'var(--a-amber)' }} />
-                  <span style={{ fontSize: 'var(--fs-sm)' }}>
-                    {inr(bill.due)} unpaid will be carried to {patient.name.split(' ')[0]}&apos;s account.
-                  </span>
-                </div>
-              )}
-              <p className="muted" style={{ fontSize: 'var(--fs-sm)', lineHeight: 1.55, marginBottom: 10 }}>
-                Saves today&apos;s charting to the permanent record and frees the chair.
-                Nothing is deleted — reopen the visit from the patient file any time.
-              </p>
-              <button className="btn btn-dark btn-block" disabled={!bill.done.length} onClick={finish}>
-                <IconHeart size={13} /> Close visit & next patient <IconArrowRight size={12} />
-              </button>
-            </Card>
-          )}
         </div>
       </div>
     </>

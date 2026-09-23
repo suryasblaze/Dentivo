@@ -4,6 +4,7 @@ import { DEFAULT_ROLES, TRIAL_DAYS, planById, ALL_PERMISSIONS } from '../data/pl
 import { ROLE_PAGES, ALL_PAGES, ALWAYS_ON } from '../data/nav'
 import { KEY, load, save, appendSubmission, appendFeedback, setRev } from './persist'
 import { localISO } from '../lib/format'
+import { billOf } from '../lib/bill'
 
 /* ---------------------------------------------------------------
    The shape of a brand-new account. Empty of clinic data — every
@@ -313,7 +314,7 @@ export function reducer(s, a) {
       return {
         ...s,
         visits: s.visits.map(v => v.id === (a.id || s.activeVisitId)
-          ? { ...v, whatsappSent: true, sentAt: now(), reviewRequested: true } : v),
+          ? { ...v, whatsappSent: true, sentAt: now(), reviewRequested: a.review !== false || !!v.reviewRequested } : v),
       }
 
     case 'CLOSE_VISIT': {
@@ -431,7 +432,9 @@ export function ClinicProvider({ children }) {
      must never write the whole store back, or a long-open tab would erase work
      done in the admin tab. They append their one record and nothing else. */
   const publicOnly = typeof window !== 'undefined' &&
-    (window.location.pathname.startsWith('/intake') || window.location.pathname.startsWith('/r/'))
+    (window.location.pathname.startsWith('/intake') || window.location.pathname.startsWith('/r/') ||
+     window.location.pathname.startsWith('/b/') ||
+     window.location.pathname.startsWith('/reviewflow'))
 
   useEffect(() => { if (!publicOnly) save(state) }, [state, publicOnly])
 
@@ -490,14 +493,7 @@ export function ClinicProvider({ children }) {
     const patient = visit ? state.patients.find(p => p.id === visit.patientId) : null
 
     /* money maths shared by billing / payment / whatsapp */
-    const done = visit ? visit.plan.filter(p => p.status === 'done') : []
-    const subtotal = done.reduce((s, l) => s + Number(l.price || 0), 0)
-    const discount = Number(visit?.discount || 0)
-    const taxable = done.filter(l => l.gst > 0).reduce((s, l) => s + Number(l.price || 0), 0)
-    const gstAmt = Math.round(taxable * 0.18)
-    const total = Math.max(0, subtotal - discount + gstAmt)
-    const paid = (visit?.payments || []).reduce((s, p) => s + Number(p.amount || 0), 0)
-    const due = Math.max(0, total - paid)
+    const { done, subtotal, discount, gstAmt, total, paid, due } = billOf(visit)
 
     const nextStage = () => {
       if (!visit) return
@@ -538,7 +534,7 @@ export function ClinicProvider({ children }) {
     const fbByVisit = new Map((state.feedback || []).map(f => [f.visitId, f]))
     const visitsWithFeedback = state.visits.map(v => {
       const f = fbByVisit.get(v.id)
-      return f ? { ...v, rating: f.rating, reviewRoute: f.rating >= 4 ? 'google' : 'private',
+      return f ? { ...v, rating: f.rating, reviewRoute: f.wentToGoogle ? 'google' : 'private',
                    privateFeedback: f.text || '', ratedAt: f.date } : v
     })
 

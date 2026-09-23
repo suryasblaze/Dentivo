@@ -29,7 +29,7 @@ The side navigation *is* the patient workflow, in order:
 | 5 | Check-In | Scheduled arrivals and walk-ins both start a visit |
 | 6 | Consultation | FDI odontogram, findings, diagnosis |
 | 7 | Treatment | Plan, tick what was done, prescribe, after-care |
-| 8 | Billing & Checkout | Invoice, UPI QR / card / cash / EMI, bill sent on WhatsApp as a PDF with the review link, close the visit |
+| 8 | Billing & Checkout | Invoice, UPI QR / card / cash / EMI, close the visit and send the bill link on WhatsApp |
 | 9 | Payments | Ledger of everything received and still owed, with WhatsApp reminders |
 | 10 | Reviews | Ratings patients left themselves through the link in their bill |
 
@@ -82,10 +82,13 @@ restarts and reboots. It is erased only by clearing site data, using a private w
 safety and blocked-storage fallback, plus the store rules (no duplicate check-ins, one invoice
 number per visit, balance carried once), the PDF bill's contents, and every route rendering.
 
-**The WhatsApp bill.** On a phone, *Send on WhatsApp* opens the share sheet with the PDF attached
-and the caption filled in. On a desktop the PDF downloads and the chat opens — WhatsApp's links
-cannot attach files, so the PDF is dragged in. The caption and the PDF both carry the patient's
-review link (`/r/<visit>`): 4★+ goes to Google, 3★ or less stays private with the clinic.
+**The WhatsApp bill.** *Finish & send bill* at checkout sends one WhatsApp message with one
+link. The link opens the bill on the patient's phone: items, payments, a UPI button for any
+balance, the prescription, and a PDF download. When the treatment is finished it also asks for a
+review — tapping a star opens the clinic's Google write-a-review box. Every patient is offered
+Google whatever they rate (showing it only to happy patients is review gating, which Google
+forbids), plus an optional private note to the clinic. Without a backend the bill travels inside
+the link after the `#`, which browsers never send to a server.
 
 Two limits while there is no backend: data does not follow you between devices or browsers, and
 a patient scanning the QR on their own phone writes to *their* storage, not your dashboard.
@@ -115,3 +118,20 @@ Configured for Vercel (`vercel.json`) and Netlify (`netlify.toml`). Both rewrite
 npm run build
 npx vercel --prod
 ```
+
+---
+
+## SRT ReviewFlow demo — `/reviewflow`
+
+A separate product demo (SRT Digital Solutions), sharing this build but not Dentivo's data or
+login. Reception completes a visit; ReviewFlow waits, sends the WhatsApp request, sends one
+reminder if nothing happens, and stops. The patient chooses Google or private feedback — both are
+offered to everyone. Private feedback is tagged from the patient's own words and summarised.
+
+- **Run Patient Demo** walks one patient through it; the demo clock (+30 min / +3 h / +1 day)
+  replaces real waiting.
+- `/reviewflow/scan` is the optional QR entry (name + mobile).
+- Rules live in `src/reviewflow/engine.js` as pure functions, ready to move to a server
+  scheduler; `npm run test:reviewflow` covers them.
+- Simulated in the demo: WhatsApp sending and delivery, Meta template approval, and AI analysis
+  (keyword tagging stands in for the model).

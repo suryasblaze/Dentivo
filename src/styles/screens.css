@@ -1051,3 +1051,50 @@ button.user-chip:hover { background: var(--canvas); }
   .chart *, .sparkbars i, .donut circle, .ring circle, .mbar-fill { animation: none !important; transition: none !important; }
   .ch-line { stroke-dashoffset: 0; } .ch-area, .ch-last { opacity: 1; } .ch-bar { transform: none; }
 }
+
+/* ============================================================
+   PATIENT BILL PAGE (/b/:id — opened from WhatsApp)
+   ============================================================ */
+.pbill { padding: 20px 18px; }
+.pbill-head { display: flex; align-items: center; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.pbill-total {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: var(--g-50); border: 1px solid var(--g-200); border-radius: var(--r-md); padding: 12px 14px;
+}
+.pbill-total small { display: block; font-size: var(--fs-micro); font-weight: 700; color: var(--muted); }
+.pbill-total b { display: block; font-size: 26px; font-weight: 800; letter-spacing: -.03em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.pbill-pill {
+  display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+  padding: 5px 10px; border-radius: 99px; font-size: var(--fs-sm); font-weight: 800;
+  background: var(--g-600); color: #fff;
+}
+.pbill-total.owed { background: var(--a-amber-bg); border-color: rgba(200,134,13,.25); }
+.pbill-total.owed .pbill-pill { background: var(--a-rose); }
+.pbill-lines { margin-top: 10px; }
+.pbill-line {
+  display: flex; justify-content: space-between; gap: 12px; padding: 8px 2px;
+  border-bottom: 1px dashed var(--line); font-size: var(--fs-md);
+}
+.pbill-line:last-child { border-bottom: 0; }
+.pbill-line em { font-style: normal; color: var(--muted); font-size: var(--fs-sm); }
+.pbill-line b { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pbill-line.sub { font-size: var(--fs-sm); color: var(--muted); }
+.pbill-sec {
+  display: flex; align-items: center; gap: 6px; margin-bottom: 4px;
+  font-size: var(--fs-sm); font-weight: 700; color: var(--muted);
+}
+.previ .stars { margin-top: 14px; }
+.previ-g { display: inline-flex; align-items: center; gap: 5px; font-size: var(--fs-micro); margin-top: 8px; }
+.link-btn { background: none; border: 0; padding: 0; color: var(--muted); font-size: var(--fs-sm); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.link-btn:hover { color: var(--ink); }
+.pbill-call { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: var(--fs-sm); color: var(--muted); padding: 6px; }
+.rv-toggle {
+  display: flex; align-items: flex-start; gap: 9px; padding: 10px 11px; cursor: pointer;
+  border: 1px solid var(--line); border-radius: var(--r-md); transition: background .15s, border-color .15s;
+}
+.rv-toggle input { margin-top: 2px; accent-color: var(--g-600); }
+.rv-toggle svg { margin-top: 2px; color: var(--faint); flex-shrink: 0; }
+.rv-toggle.on { background: var(--g-50); border-color: var(--g-200); }
+.rv-toggle.on svg { color: var(--a-amber); }
+.rv-toggle b { display: block; font-size: var(--fs-base); }
+.rv-toggle small { display: block; font-size: var(--fs-micro); color: var(--muted); line-height: 1.45; }

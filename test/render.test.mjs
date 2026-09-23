@@ -59,6 +59,14 @@ const ROUTES = [
   '/checkin', '/consultation', '/treatment', '/billing', '/payment',
   '/review', '/reports', '/settings', '/roles', '/subscription', '/requests',
   '/r/v1?c=Test%20Dental&n=Surya&g=https%3A%2F%2Fg.page%2Ftest%2Freview',
+  '/b/v1#' + Buffer.from(JSON.stringify({
+    v: 1, c: { n: 'Test Dental', a: 'Chennai', p: '044 1234', u: 'test@upi', r: 'https://g.page/r/test/review' },
+    p: { n: 'Surya Kumar', id: 'P-0001' }, i: { no: 'INV-0001', d: '2026-09-21', t: 'T-01' },
+    l: [['IOPA X-ray', '36', 300]], m: [300, 0, 0, 300, 100, 200], pay: [['UPI', 100]],
+    rx: [['Amoxicillin 500mg', '1-1-1', 5]], nx: 'In 1 week', ask: 1,
+  })).toString('base64url'),
+  '/b/v1#cut-short',
+  '/reviewflow', '/reviewflow/scan',
 ]
 
 const entry = join(TMP, 'entry.jsx')
@@ -82,7 +90,7 @@ await build({
   platform: 'node',
   outfile: join(TMP, 'bundle.mjs'),
   loader: { '.png': 'dataurl', '.css': 'empty' },
-  external: ['react', 'react-dom', 'react-dom/server', 'react-router-dom', 'jspdf'],
+  external: ['react', 'react-dom', 'react-dom/server', 'react-router-dom', 'jspdf', 'qrcode-generator'],
   jsx: 'automatic',
   logLevel: 'error',
 })

@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { Card, Stat, Badge, Avatar, Eyebrow, Blank, Seg, Tile, DataRow, Ring } from '../components/UI'
 import { useClinic } from '../store/ClinicStore'
 import { prettyDate } from '../lib/format'
-import { openWhatsApp, reviewUrl } from '../lib/links'
+import { openWhatsApp, billLink } from '../lib/links'
+import { billOf } from '../lib/bill'
 import { IconStar, IconWhatsApp, IconAlert, IconCheck, IconSettings, IconGoogleG, IconClock } from '../lib/icons'
 
 const Stars = ({ n, size = 11 }) => (
@@ -22,10 +23,10 @@ export default function Reviews() {
   const [filter, setFilter] = useState('all')
 
   const pt = (id) => patients.find(p => p.id === id)
-  const asked = visits.filter(v => v.reviewRequested || v.whatsappSent || v.rating)
+  const asked = visits.filter(v => v.reviewRequested || v.rating)
   const rated = asked.filter(v => v.rating > 0)
-  const happy = rated.filter(v => v.rating >= 4)
   const unhappy = rated.filter(v => v.rating <= 3)
+  const toGoogle = rated.filter(v => v.reviewRoute === 'google')
   const avg = rated.length ? (rated.reduce((s, v) => s + v.rating, 0) / rated.length) : 0
   const responseRate = asked.length ? Math.round((rated.length / asked.length) * 100) : 0
 
@@ -38,9 +39,9 @@ export default function Reviews() {
   const nudge = (v) => {
     const p = pt(v.patientId)
     const first = (p?.name || '').split(' ')[0]
-    const link = reviewUrl({ visit: v, patient: p, clinic })
+    const link = billLink({ clinic, patient: p, visit: v, bill: billOf(v), askReview: true })
     const ok = openWhatsApp(p?.phone,
-      `Hello ${first}, thank you again for visiting *${clinic.name}*. If you have a moment, how did we do?\n\n${link}`)
+      `Hello ${first}, thank you again for visiting *${clinic.name}*. If you have a moment, tell us how we did. It takes 10 seconds:\n\n${link}`)
     toast(ok ? 'Reminder opened in WhatsApp' : 'No mobile number saved')
   }
 
@@ -50,7 +51,7 @@ export default function Reviews() {
         <div>
           <Eyebrow>Step 10 · patients</Eyebrow>
           <h1>Reviews</h1>
-          <p>Patients rate the visit from the link in their WhatsApp bill. Here is what came back.</p>
+          <p>Patients rate the visit from their WhatsApp bill link, and a star tap takes them straight to Google.</p>
         </div>
         <div className="page-head-actions">
           <Seg value={filter} onChange={setFilter} options={[
@@ -68,7 +69,7 @@ export default function Reviews() {
           <div style={{ minWidth: 0 }}>
             <div className="strong" style={{ fontSize: 'var(--fs-base)' }}>Add your Google review link</div>
             <div className="faint" style={{ fontSize: 'var(--fs-micro)' }}>
-              Without it, happy patients can rate you here but cannot be sent on to Google.
+              Without it, patients can rate you here but cannot be taken to Google.
             </div>
           </div>
           <div className="spacer" />
@@ -83,8 +84,8 @@ export default function Reviews() {
           foot="With the WhatsApp bill" />
         <Stat label="Response rate" value={String(responseRate)} unit="%"
           bars={[0, 0, 0, 0, 0, 0, responseRate]} foot={`${asked.length - rated.length} still waiting`} />
-        <Stat label="Sent on to Google" value={String(happy.length)} bars={[0, 0, 0, 0, 0, 0, happy.length ? 1 : 0]}
-          foot={`${unhappy.length} came to you privately`} deltaTone="flat" />
+        <Stat label="Opened Google" value={String(toGoogle.length)} bars={[0, 0, 0, 0, 0, 0, toGoogle.length ? 1 : 0]}
+          foot={`${rated.filter(v => v.privateFeedback).length} private note(s)`} deltaTone="flat" />
       </div>
 
       <div className="grid g-main">
@@ -95,7 +96,7 @@ export default function Reviews() {
               action={!asked.length && <button className="btn btn-soft btn-sm" onClick={() => nav('/checkin')}>Go to Check-In</button>}>
               {asked.length
                 ? 'Try another filter.'
-                : 'Every bill you send on WhatsApp from checkout carries a review link. Ratings land here.'}
+                : 'When a finished treatment is billed on WhatsApp, the bill link asks for a review. Ratings land here.'}
             </Blank>
           ) : (
             <div className="col" style={{ gap: 8 }}>
@@ -127,7 +128,7 @@ export default function Reviews() {
                         )}
                       </div>
                       <div className="col" style={{ gap: 5, alignItems: 'flex-end', flexShrink: 0 }}>
-                        {v.rating >= 4 && <Badge tone="green"><IconGoogleG size={9} /> Sent to Google</Badge>}
+                        {v.reviewRoute === 'google' && <Badge tone="green"><IconGoogleG size={9} /> Opened Google</Badge>}
                         {sad && <Badge tone="red"><IconAlert size={8} /> Needs a call</Badge>}
                         {!v.rating && (
                           <button className="btn btn-ghost btn-sm" onClick={() => nudge(v)}>
@@ -170,21 +171,22 @@ export default function Reviews() {
             )}
           </Card>
 
-          <Card title="How the link works">
+          <Card title="How it works">
             <div style={{ margin: '0 -9px' }}>
               <DataRow lead={<Tile tone="green"><IconWhatsApp size={12} color="currentColor" /></Tile>}
-                title="Sent with the bill" sub="From checkout, alongside the PDF" />
+                title="One link with the bill" sub="Bill, PDF and prescription on the patient's phone" />
               <DataRow lead={<Tile tone="amber"><IconStar size={12} /></Tile>}
-                title="Patient taps a rating" sub="On their own phone, ten seconds" />
+                title="Only when treatment is finished" sub="Not mid-way through an RCT or braces" />
               <DataRow lead={<Tile tone="blue"><IconGoogleG size={12} /></Tile>}
-                title="4–5★ go on to Google" sub="One tap to post publicly" />
+                title="A star tap opens Google" sub="The patient posts it, signed in as themselves" />
               <DataRow lead={<Tile tone="rose"><IconCheck size={12} /></Tile>}
-                title="1–3★ reach you first" sub="So you can call and put it right" />
+                title="Private note, if they want" sub="Offered to everyone, alongside Google" />
             </div>
             <div className="divider-x" />
             <p className="faint" style={{ fontSize: 'var(--fs-micro)', lineHeight: 1.55 }}>
-              Every patient also sees a Google link whatever they rate. Hiding it from unhappy
-              patients is review gating, which Google forbids.
+              Every patient is offered Google, whatever they rate. Sending only happy patients
+              there is review gating, which Google forbids. No app can post a Google review for
+              the patient, so Google asks them to tap the stars once more before posting.
             </p>
           </Card>
 

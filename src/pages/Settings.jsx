@@ -81,8 +81,8 @@ export default function Settings() {
                 <input className="input mono-num" value={c.upiId} placeholder="name@bank"
                   onChange={e => setC(s => ({ ...s, upiId: e.target.value }))} />
               </Field>
-              <Field label="Google review link" span={2} hint="Opened from the Review page">
-                <input className="input" value={c.googlePlaceUrl} placeholder="https://g.page/…"
+              <Field label="Google review link" span={2} hint="Google Business Profile → Ask for reviews → copy the link (g.page/r/…/review). A Place ID (ChIJ…) also works.">
+                <input className="input" value={c.googlePlaceUrl} placeholder="https://g.page/r/…/review"
                   onChange={e => setC(s => ({ ...s, googlePlaceUrl: e.target.value }))} />
               </Field>
             </div>

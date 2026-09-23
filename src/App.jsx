@@ -6,6 +6,11 @@ import { pageByPath } from './data/nav'
 
 import PublicIntake from './pages/PublicIntake'
 import PublicReview from './pages/PublicReview'
+import PublicBill from './pages/PublicBill'
+/* separate product — loaded only when /reviewflow is opened */
+const ReviewFlow = React.lazy(() => import('./reviewflow/ReviewFlow'))
+const ReviewFlowScan = React.lazy(() => import('./reviewflow/Scan'))
+const Loading = () => <div style={{ padding: 40, textAlign: 'center', color: '#64748B' }}>Loading SRT ReviewFlow…</div>
 import Payments from './pages/Payments'
 import Reviews from './pages/Reviews'
 import Login from './pages/Login'
@@ -90,6 +95,11 @@ function Router() {
         {/* public — what the QR opens */}
         <Route path="/intake" element={<PublicIntake />} />
         <Route path="/r/:id" element={<PublicReview />} />
+        <Route path="/b/:id" element={<PublicBill />} />
+
+        {/* SRT ReviewFlow — separate product demo, no login */}
+        <Route path="/reviewflow" element={<React.Suspense fallback={<Loading />}><ReviewFlow /></React.Suspense>} />
+        <Route path="/reviewflow/scan" element={<React.Suspense fallback={<Loading />}><ReviewFlowScan /></React.Suspense>} />
 
         <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
         {PAGES.map(([path, Comp]) => (
