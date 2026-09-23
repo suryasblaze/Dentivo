@@ -66,6 +66,7 @@ const ROUTES = [
     rx: [['Amoxicillin 500mg', '1-1-1', 5]], nx: 'In 1 week', ask: 1,
   })).toString('base64url'),
   '/b/v1#cut-short',
+  '/go/demo', '/go/other?c=Sree%20Dental&g=https%3A%2F%2Fg.page%2Fr%2Fx%2Freview',
   '/reviewflow', '/reviewflow/scan',
 ]
 

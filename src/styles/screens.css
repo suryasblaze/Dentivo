@@ -1098,3 +1098,8 @@ button.user-chip:hover { background: var(--canvas); }
 .rv-toggle.on svg { color: var(--a-amber); }
 .rv-toggle b { display: block; font-size: var(--fs-base); }
 .rv-toggle small { display: block; font-size: var(--fs-micro); color: var(--muted); line-height: 1.45; }
+.code-line {
+  background: var(--canvas); border: 1px solid var(--line); border-radius: var(--r-sm);
+  padding: 8px 10px; font-family: ui-monospace, monospace; font-size: 11px; color: var(--ink-2);
+  white-space: pre-wrap; word-break: break-all; margin: 0;
+}

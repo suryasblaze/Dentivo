@@ -7,6 +7,7 @@ import { pageByPath } from './data/nav'
 import PublicIntake from './pages/PublicIntake'
 import PublicReview from './pages/PublicReview'
 import PublicBill from './pages/PublicBill'
+import ShortReview from './pages/ShortReview'
 /* separate product — loaded only when /reviewflow is opened */
 const ReviewFlow = React.lazy(() => import('./reviewflow/ReviewFlow'))
 const ReviewFlowScan = React.lazy(() => import('./reviewflow/Scan'))
@@ -96,6 +97,7 @@ function Router() {
         <Route path="/intake" element={<PublicIntake />} />
         <Route path="/r/:id" element={<PublicReview />} />
         <Route path="/b/:id" element={<PublicBill />} />
+        <Route path="/go/:slug" element={<ShortReview />} />
 
         {/* SRT ReviewFlow — separate product demo, no login */}
         <Route path="/reviewflow" element={<React.Suspense fallback={<Loading />}><ReviewFlow /></React.Suspense>} />

@@ -10,13 +10,13 @@ const posix = (p) => p.replace(/\\/g, '/')
 
 writeFileSync(join(TMP, 'entry.js'),
   `export { billPdf } from '${posix(join(process.cwd(), 'src/lib/pdf.js'))}'
-   export { billMessage, billLink, billLinkSync, readBillLink, googleReviewUrl, isLocalLink } from '${posix(join(process.cwd(), 'src/lib/links.js'))}'`)
+   export { billMessage, billLink, billLinkSync, readBillLink, googleReviewUrl, isLocalLink, shortReviewUrl, reviewOnlyMessage } from '${posix(join(process.cwd(), 'src/lib/links.js'))}'`)
 await build({
   entryPoints: [join(TMP, 'entry.js')], bundle: true, format: 'esm', platform: 'node',
   outfile: join(TMP, 'bundle.mjs'), external: ['jspdf'], logLevel: 'error',
 })
 globalThis.window = { location: { origin: 'https://dentivo.test' } }
-const { billPdf, billMessage, billLink, billLinkSync, readBillLink, googleReviewUrl, isLocalLink } = await import('file://' + posix(join(TMP, 'bundle.mjs')))
+const { billPdf, billMessage, billLink, billLinkSync, readBillLink, googleReviewUrl, isLocalLink, shortReviewUrl, reviewOnlyMessage } = await import('file://' + posix(join(TMP, 'bundle.mjs')))
 
 let pass = 0, fail = 0
 const ok = (n, c, got) => { c ? (pass++, console.log('  PASS  ' + n)) : (fail++, console.log('  FAIL  ' + n + (got !== undefined ? '   got: ' + got : ''))) }
@@ -56,6 +56,17 @@ ok('a localhost link is spotted', isLocalLink('http://localhost:5199/b/v1#x') &&
 ok('a bare Place ID becomes a write-review link',
   googleReviewUrl({ googlePlaceUrl: 'ChIJN1t_tDeuEmsRUsoyG83frY4' }) ===
   'https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4')
+
+console.log('\n1b. The short review link')
+const listed = shortReviewUrl({ ...clinic, slug: 'sree' }, { listed: true })
+ok('is short and readable', listed === 'https://dentivo.test/go/sree', listed)
+ok('is far shorter than the bill link', listed.length < link.length / 5, `${listed.length} vs ${link.length} chars`)
+const unlisted = shortReviewUrl({ ...clinic, slug: 'sree' })
+ok('an unlisted clinic still works', unlisted.includes('c=Sree') && unlisted.includes('g=https'), unlisted)
+ok('no slug, no short link', shortReviewUrl(clinic) === '')
+const only = reviewOnlyMessage({ clinic, patient, link: listed })
+ok('review-only message carries just the short link',
+  only.includes(listed) && !only.includes('INV-0001') && (only.match(/https?:\/\//g) || []).length === 1)
 
 console.log('\n2. The PDF')
 const { blob, file } = billPdf({ clinic, patient, visit, bill, reviewUrl: GOOGLE })

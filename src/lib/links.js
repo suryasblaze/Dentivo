@@ -238,3 +238,31 @@ export function apptMessage(kind, { clinic, patient, appt, doctor }) {
   }
   return (bodies[kind] || bodies.confirm).filter(l => l !== '').join('\n').replace(/\n(?=\*)/g, '\n')
 }
+
+/* ---------- The short review link ----------
+   Carries no patient data, so it stays short: dentivo.app/go/sree
+   A clinic listed in src/data/clinics.js needs nothing else; one that is
+   not listed carries its name and Google link as readable parameters. */
+export function shortReviewUrl(clinic, { listed = false } = {}) {
+  const slug = String(clinic?.slug || '').trim()
+  if (!slug) return ''
+  const base = `${origin()}/go/${slug}`
+  if (listed) return base
+  const q = new URLSearchParams()
+  if (clinic?.name) q.set('c', clinic.name)
+  const g = googleReviewUrl(clinic)
+  if (g) q.set('g', g)
+  const s = q.toString()
+  return s ? `${base}?${s}` : base
+}
+
+/* "Rate us on Google" on its own — no bill, no PDF, one short link */
+export function reviewOnlyMessage({ clinic, patient, link }) {
+  const first = (patient?.name || '').split(' ')[0]
+  return [
+    `Hello ${first}, thank you for visiting *${clinic?.name || 'our clinic'}* today.`,
+    '',
+    'If you have 10 seconds, would you tell us how we did? It helps other people find us:',
+    link,
+  ].join('\n')
+}

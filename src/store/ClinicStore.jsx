@@ -434,6 +434,7 @@ export function ClinicProvider({ children }) {
   const publicOnly = typeof window !== 'undefined' &&
     (window.location.pathname.startsWith('/intake') || window.location.pathname.startsWith('/r/') ||
      window.location.pathname.startsWith('/b/') ||
+     window.location.pathname.startsWith('/go/') ||
      window.location.pathname.startsWith('/reviewflow'))
 
   useEffect(() => { if (!publicOnly) save(state) }, [state, publicOnly])

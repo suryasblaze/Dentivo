@@ -6,7 +6,11 @@ import CollectPayment from '../../components/CollectPayment'
 import NoVisit from './NoVisit'
 import { useClinic } from '../../store/ClinicStore'
 import { inr, prettyDate } from '../../lib/format'
-import { billMessage, billLink, billLinkSync, googleReviewUrl, downloadBlob, openWhatsApp, isLocalLink } from '../../lib/links'
+import {
+  billMessage, billLink, billLinkSync, googleReviewUrl, shortReviewUrl, reviewOnlyMessage,
+  downloadBlob, openWhatsApp, isLocalLink,
+} from '../../lib/links'
+import { clinicBySlug } from '../../data/clinics'
 import { treatmentComplete } from '../../lib/bill'
 import {
   IconReceipt, IconArrowRight, IconAlert, IconWhatsApp, IconCheck, IconFile,
@@ -30,6 +34,7 @@ export default function Billing() {
   const nav = useNavigate()
   const [askReview, setAskReview] = useState(null)   // null = follow the treatment plan
   const [link, setLink] = useState('')               // built ahead of the click
+  const [mode, setMode] = useState('bill')           // what the WhatsApp message carries
 
   /* keep the invoice amounts current; the number itself is issued once */
   useEffect(() => {
@@ -70,10 +75,13 @@ export default function Billing() {
   /* One message, one link: bill + PDF + (when treatment is finished) review.
      Compressing the bill into the link is asynchronous, so it is prepared
      while the screen sits there — the click itself stays instant. */
+  const short = shortReviewUrl(clinic, { listed: !!clinicBySlug(clinic.slug) })
   const send = () => {
-    const url = link || billLinkSync({ clinic, patient, visit, bill, askReview: ask })
-    const ok = openWhatsApp(patient.phone, billMessage({ clinic, patient, visit, bill, link: url, askReview: ask }))
-    if (ok) dispatch({ type: 'MARK_SENT', id: visit.id, review: ask })
+    const text = mode === 'review' && short
+      ? reviewOnlyMessage({ clinic, patient, link: short })
+      : billMessage({ clinic, patient, visit, bill, askReview: ask, link: link || billLinkSync({ clinic, patient, visit, bill, askReview: ask }) })
+    const ok = openWhatsApp(patient.phone, text)
+    if (ok) dispatch({ type: 'MARK_SENT', id: visit.id, review: mode === 'review' ? true : ask })
     return ok
   }
 
@@ -250,7 +258,22 @@ export default function Billing() {
               )}
             </div>
 
-            {!closed && (
+            {!closed && short && (
+              <div className="field" style={{ marginBottom: 8 }}>
+                <label>What the message carries</label>
+                <div className="seg" style={{ width: '100%' }}>
+                  <button className={mode === "bill" ? "on" : ""} style={{ flex: 1 }} onClick={() => setMode('bill')}>Bill + review</button>
+                  <button className={mode === "review" ? "on" : ""} style={{ flex: 1 }} onClick={() => setMode('review')}>Review only</button>
+                </div>
+                <span className="faint" style={{ fontSize: 'var(--fs-micro)', lineHeight: 1.45, display: 'block', marginTop: 5 }}>
+                  {mode === 'bill'
+                    ? 'One long link holding the whole bill, the PDF and the review ask.'
+                    : <>Just <b>{short.replace(/^https?:\/\//, '').split('?')[0]}</b> — short, no bill attached.</>}
+                </span>
+              </div>
+            )}
+
+            {!closed && mode === 'bill' && (
               <label className={`rv-toggle ${ask ? 'on' : ''}`}>
                 <input type="checkbox" checked={ask} onChange={e => setAskReview(e.target.checked)} />
                 <IconStar size={13} filled={ask} />

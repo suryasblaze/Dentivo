@@ -2,11 +2,18 @@ import React, { useState } from 'react'
 import { Card, Badge, Avatar, Tabs, Field, Chip, Eyebrow, Tile, DataRow, Modal, Blank, Switch } from '../components/UI'
 import { useClinic } from '../store/ClinicStore'
 import { ROLES, ROLE_COLORS } from '../data/config'
+import { clinicBySlug, slugify } from '../data/clinics'
+import { shortReviewUrl } from '../lib/links'
 import { GROQ_MODELS, DEFAULT_MODEL, testKey } from '../lib/ai'
-import { IconCheck, IconPlus, IconX, IconChair, IconUsers, IconAlert, IconQr, IconSparkle, IconShield, IconEye, IconEyeOff } from '../lib/icons'
+import { IconCheck, IconPlus, IconX, IconChair, IconUsers, IconAlert, IconQr, IconSparkle, IconShield, IconEye, IconEyeOff, IconStar } from '../lib/icons'
 
 export default function Settings() {
   const { clinic, staff, chairs, dispatch, toast } = useClinic()
+  const listed = !!clinicBySlug(clinic.slug)
+  const shortLink = shortReviewUrl(clinic, { listed })
+  const copyShort = () => {
+    navigator.clipboard?.writeText(shortLink).then(() => toast('Short link copied'), () => toast(shortLink))
+  }
   const [tab, setTab] = useState('clinic')
   const [c, setC] = useState(clinic)
   const [addStaff, setAddStaff] = useState(false)
@@ -85,10 +92,40 @@ export default function Settings() {
                 <input className="input" value={c.googlePlaceUrl} placeholder="https://g.page/r/…/review"
                   onChange={e => setC(s => ({ ...s, googlePlaceUrl: e.target.value }))} />
               </Field>
+              <Field label="Short review link" span={2} hint="Letters and dashes only — this becomes /go/<name>, short enough to print or read out">
+                <input className="input mono-num" value={c.slug || ''} placeholder="sree-dental"
+                  onChange={e => setC(s => ({ ...s, slug: slugify(e.target.value) }))} />
+              </Field>
             </div>
             <div className="divider" />
             <button className="btn btn-primary" onClick={saveClinic}><IconCheck size={13} /> Save</button>
           </Card>
+
+          {clinic.slug && (
+            <Card title="Your short review link" sub="No patient data in it, so it stays short">
+              <div className="lrow" style={{ marginBottom: 8 }}>
+                <IconStar size={14} style={{ color: 'var(--a-amber)' }} />
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div className="strong mono-num" style={{ fontSize: 'var(--fs-md)', wordBreak: 'break-all' }}>
+                    {shortLink.replace(/^https?:\/\//, '').split('?')[0]}
+                  </div>
+                  <div className="faint" style={{ fontSize: 'var(--fs-micro)' }}>
+                    {listed
+                      ? 'Opens straight to your Google review page.'
+                      : 'Until this clinic is added to src/data/clinics.js, the link carries your name and Google link as parameters — longer, but it works.'}
+                  </div>
+                </div>
+                <button className="btn btn-ghost btn-sm" onClick={copyShort}>Copy</button>
+              </div>
+              <p className="faint" style={{ fontSize: 'var(--fs-micro)', lineHeight: 1.5 }}>
+                Use it on a QR at the desk, on a printed card, or on its own in WhatsApp when you
+                only want a review and not a bill. Checkout has a <b>Review only</b> option that sends it.
+              </p>
+              {!listed && (
+                <pre className="code-line" style={{ marginTop: 8 }}>{`${clinic.slug}: { name: '${clinic.name}', google: '${clinic.googlePlaceUrl || ''}' },`}</pre>
+              )}
+            </Card>
+          )}
 
           <Card title="Fill these in first">
             <p className="muted" style={{ fontSize: 'var(--fs-sm)', lineHeight: 1.6, marginBottom: 10 }}>

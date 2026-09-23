@@ -12,6 +12,7 @@ export const DEFAULT_CLINIC = {
   regNo: '',
   upiId: '',
   googlePlaceUrl: '',
+  slug: '',            // short review link: /go/<slug>
 }
 
 export const DEFAULT_STAFF = [
