@@ -1126,3 +1126,18 @@ button.user-chip:hover { background: var(--canvas); }
 @keyframes popIn { from { opacity: 0; } }
 @keyframes popUp { from { opacity: 0; transform: translateY(14px) scale(.96); } }
 .pop-card .link-btn { display: block; width: 100%; }
+
+/* ---------- sign up ---------- */
+.auth-link {
+  background: none; border: 0; padding: 0; color: var(--g-600); font-weight: 800;
+  font-size: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
+}
+.auth-link:hover { color: var(--g-700); }
+.auth-foot-note { display: block; font-size: var(--fs-micro); color: var(--faint); margin-top: 4px; }
+.auth-signup { max-width: 380px; text-align: left; padding: 24px 22px 20px; }
+.auth-signup h3 { font-size: var(--fs-xl); text-align: center; }
+.auth-signup p { text-align: center; }
+.auth-signup .auth-input-wrap { margin-bottom: 10px; }
+.auth-signup .auth-btn { margin-top: 4px; }
+.auth-signup .auth-btn:disabled { opacity: .5; cursor: default; }
+.auth-fine { font-size: var(--fs-micro) !important; color: var(--faint) !important; line-height: 1.5; margin: 12px 0 0 !important; }

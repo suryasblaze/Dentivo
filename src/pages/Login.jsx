@@ -4,7 +4,7 @@ import { useClinic } from '../store/ClinicStore'
 import { LogoMark, LogoWordmark } from '../components/Logo'
 import {
   IconToothFilled, IconEye, IconEyeOff, IconGoogleG, IconPhone, IconMail,
-  IconQueue, IconWhatsApp, IconStar, IconRupee,
+  IconQueue, IconWhatsApp, IconStar, IconRupee, IconX,
 } from '../lib/icons'
 
 /* Drop your generated art in /public with these names and it appears automatically.
@@ -61,6 +61,48 @@ function Face({ src, className }) {
   )
 }
 
+/* =========================================================================
+   Sign up — what a new clinic fills in before its 30-day trial starts.
+   Four fields, because nothing else is needed to open a clinic: the rest
+   is filled in later from Settings.
+   ========================================================================= */
+function SignUp({ onClose, onDone }) {
+  const [f, setF] = useState({ clinic: '', owner: '', mobile: '', email: '', pw: '' })
+  const set = (k) => (e) => setF(s => ({ ...s, [k]: e.target.value }))
+  const valid = f.clinic.trim() && f.owner.trim() && f.mobile.replace(/\D/g, '').length >= 10
+
+  return (
+    <div className="pop" role="dialog" aria-modal="true" onClick={onClose}>
+      <div className="pop-card auth-signup" onClick={e => e.stopPropagation()}>
+        <button className="pop-x" onClick={onClose} aria-label="Close"><IconX size={14} /></button>
+        <h3>Start your free trial</h3>
+        <p>30 days of everything. No card, cancel any time.</p>
+
+        <form onSubmit={e => { e.preventDefault(); if (valid) onDone(f) }}>
+          <div className="auth-input-wrap">
+            <input className="auth-input" value={f.clinic} autoFocus placeholder="Clinic name" onChange={set('clinic')} />
+          </div>
+          <div className="auth-input-wrap">
+            <input className="auth-input" value={f.owner} placeholder="Your name" onChange={set('owner')} />
+          </div>
+          <div className="auth-input-wrap">
+            <input className="auth-input" value={f.mobile} inputMode="tel" placeholder="Mobile number" onChange={set('mobile')} />
+          </div>
+          <div className="auth-input-wrap">
+            <input className="auth-input" value={f.email} type="email" placeholder="Email (optional)" onChange={set('email')} />
+          </div>
+          <button className="auth-btn" type="submit" disabled={!valid}>Create my clinic</button>
+        </form>
+
+        <p className="auth-fine">
+          By continuing you agree to let us message your patients on your behalf, and confirm you
+          have their consent to be contacted.
+        </p>
+      </div>
+    </div>
+  )
+}
+
 export default function Login() {
   const { clinic, staff, dispatch } = useClinic()
   const nav = useNavigate()
@@ -70,6 +112,7 @@ export default function Login() {
   const [show, setShow] = useState(false)
   const [slide, setSlide] = useState(0)
   const [paused, setPaused] = useState(false)
+  const [signup, setSignup] = useState(false)
 
   /* auto-advance the tagline; hovering the panel pauses it */
   useEffect(() => {
@@ -80,6 +123,16 @@ export default function Login() {
 
   const choose = (s) => { setPick(s.id); setUser(s.name) }
   const signIn = () => { dispatch({ type: 'LOGIN', id: pick }); nav('/dashboard') }
+
+  /* A new clinic: name it, name its owner, start the trial, walk straight in. */
+  const createClinic = ({ clinic: name, owner, mobile, email }) => {
+    dispatch({ type: 'SET_CLINIC', patch: { name: name.trim(), phone: mobile.trim(), email: email.trim() } })
+    const first = staff[0]
+    if (first) dispatch({ type: 'UPDATE_STAFF', id: first.id, patch: { name: owner.trim(), email: email.trim() } })
+    dispatch({ type: 'LOGIN', id: first?.id })
+    setSignup(false)
+    nav('/dashboard')
+  }
 
   return (
     <div className="auth">
@@ -136,10 +189,14 @@ export default function Login() {
           </div>
 
           <div className="auth-foot">
-            New clinic? <a href="/intake" target="_blank" rel="noreferrer">Open the patient form</a>
+            Don&apos;t have an account?{' '}
+            <button type="button" className="auth-link" onClick={() => setSignup(true)}>Sign up free</button>
+            <span className="auth-foot-note">30-day trial · no card needed</span>
           </div>
         </div>
       </div>
+
+      {signup && <SignUp onClose={() => setSignup(false)} onDone={createClinic} />}
 
       {/* ---------------- Right: illustration panel ---------------- */}
       <div className="auth-right">
