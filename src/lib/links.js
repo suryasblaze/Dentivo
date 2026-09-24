@@ -167,8 +167,8 @@ export function billMessage({ clinic, patient, visit, bill, link, askReview }) {
   ]
   if (visit?.nextVisit) lines.push(`Next visit: ${visit.nextVisit}`)
   lines.push('', askReview
-    ? 'View or download your bill and prescription, and tell us how we did:'
-    : 'View or download your bill and prescription:', link)
+    ? '📄 Tap to view your bill, download the PDF and tell us how we did:'
+    : '📄 Tap to view your bill and download the PDF:', link)
   if (clinic?.phone) lines.push('', `Questions? Call ${clinic.phone}.`)
   return lines.join('\n')
 }

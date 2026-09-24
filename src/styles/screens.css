@@ -1103,3 +1103,26 @@ button.user-chip:hover { background: var(--canvas); }
   padding: 8px 10px; font-family: ui-monospace, monospace; font-size: 11px; color: var(--ink-2);
   white-space: pre-wrap; word-break: break-all; margin: 0;
 }
+
+/* ---------- the review ask, right after the PDF download ---------- */
+.pop {
+  position: fixed; inset: 0; z-index: 60; background: rgba(15, 25, 35, .45);
+  display: grid; place-items: center; padding: 20px; animation: popIn .18s ease-out;
+  backdrop-filter: blur(2px);
+}
+.pop-card {
+  background: var(--surface); border-radius: var(--r-xl); padding: 22px 20px 18px;
+  width: 100%; max-width: 340px; text-align: center; position: relative;
+  box-shadow: 0 24px 60px -18px rgba(15, 25, 35, .45); animation: popUp .28s cubic-bezier(.34, 1.3, .64, 1);
+}
+.pop-x { position: absolute; top: 10px; right: 10px; background: none; border: 0; color: var(--faint); padding: 4px; }
+.pop-x:hover { color: var(--ink); }
+.pop-ico {
+  width: 46px; height: 46px; border-radius: 50%; background: var(--g-50); border: 1.5px solid var(--g-200);
+  color: var(--g-600); display: grid; place-items: center; margin: 0 auto 12px;
+}
+.pop-card h3 { font-size: var(--fs-lg); font-weight: 800; margin: 0 0 6px; }
+.pop-card p { color: var(--muted); font-size: var(--fs-md); line-height: 1.55; margin: 0 0 16px; }
+@keyframes popIn { from { opacity: 0; } }
+@keyframes popUp { from { opacity: 0; transform: translateY(14px) scale(.96); } }
+.pop-card .link-btn { display: block; width: 100%; }

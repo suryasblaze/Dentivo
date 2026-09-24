@@ -8,6 +8,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <!-- What WhatsApp shows instead of a bare URL: a card with a title and
+         picture. WhatsApp reads these tags from the server, and never sees
+         the part of the link after #, so the card is the same for everyone. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Dentivo" />
+    <meta property="og:title" content="Your bill &amp; prescription" />
+    <meta property="og:description" content="Tap to view your bill, download the PDF and tell us how we did." />
+    <meta property="og:image" content="https://dentivoapp-bice.vercel.app/logo-full.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
   </head>
   <body>
     <div id="root"></div>

@@ -5,7 +5,7 @@ import { LogoMark } from '../components/Logo'
 import { inr, prettyDate } from '../lib/format'
 import { readBillLink, upiLink, downloadBlob } from '../lib/links'
 import {
-  IconStar, IconCheck, IconGoogleG, IconDownload, IconRx, IconCalendar, IconPhone, IconUpi, IconAlert,
+  IconStar, IconCheck, IconGoogleG, IconDownload, IconRx, IconCalendar, IconPhone, IconUpi, IconAlert, IconX,
 } from '../lib/icons'
 
 const WORDS = ['', 'Very poor', 'Poor', 'Okay', 'Good', 'Excellent!']
@@ -33,6 +33,7 @@ export default function PublicBill() {
   const [note, setNote] = useState('')
   const [noteSent, setNoteSent] = useState(false)
   const [pdfBusy, setPdfBusy] = useState(false)
+  const [pop, setPop] = useState(false)      // the review ask, right after the download
 
   if (data === undefined) {
     return <div className="pub"><div className="pub-card" style={{ textAlign: 'center' }}>Opening your bill…</div></div>
@@ -81,9 +82,18 @@ export default function PublicBill() {
       const { billPdf } = await import('../lib/pdf')
       const { blob, file } = billPdf({ clinic, patient, visit, bill, reviewUrl: askReview ? google : '' })
       downloadBlob(blob, file)
+      /* they have what they came for — now is the moment to ask */
+      if (askReview && !opened) setTimeout(() => setPop(true), 900)
     } finally {
       setPdfBusy(false)
     }
+  }
+
+  const popGoogle = () => {
+    submitFeedback({ visitId: id, rating: 0, text: '', wentToGoogle: !!google })
+    if (google) window.open(google, '_blank', 'noopener')
+    setOpened(true)
+    setPop(false)
   }
 
   return (
@@ -132,9 +142,9 @@ export default function PublicBill() {
               <IconUpi size={15} /> Pay {inr(bill.due)} by UPI
             </a>
           )}
-          <button className={`btn ${pay ? 'btn-ghost' : 'btn-soft'} btn-block`} style={{ marginTop: 8 }}
+          <button className={`btn ${pay ? 'btn-ghost' : 'btn-primary btn-lg'} btn-block`} style={{ marginTop: pay ? 8 : 12 }}
             onClick={pdf} disabled={pdfBusy}>
-            <IconDownload size={13} /> {pdfBusy ? 'Preparing…' : 'Download bill (PDF)'}
+            <IconDownload size={pay ? 13 : 15} /> {pdfBusy ? 'Preparing…' : 'Download bill (PDF)'}
           </button>
         </div>
 
@@ -212,6 +222,39 @@ export default function PublicBill() {
                 Something not right? Tell the clinic privately
               </button>
             )}
+          </div>
+        )}
+
+        {pop && (
+          <div className="pop" role="dialog" aria-modal="true" onClick={() => setPop(false)}>
+            <div className="pop-card" onClick={e => e.stopPropagation()}>
+              <button className="pop-x" onClick={() => setPop(false)} aria-label="Close"><IconX size={14} /></button>
+              <div className="pop-ico"><IconCheck size={22} /></div>
+              <h3>Your bill is downloaded</h3>
+              <p>
+                {google
+                  ? <>One last thing{first ? `, ${first}` : ''} — would you tell others how it went? It takes 10 seconds.</>
+                  : <>How was your visit{first ? `, ${first}` : ''}?</>}
+              </p>
+              {google ? (
+                <button className="btn btn-primary btn-lg btn-block" onClick={popGoogle}>
+                  <IconGoogleG size={15} /> Review us on Google
+                </button>
+              ) : (
+                <div className="stars" style={{ justifyContent: 'center', margin: '4px 0 2px' }}>
+                  {[1, 2, 3, 4, 5].map(n => (
+                    <button key={n} className={`star-btn ${rating >= n ? 'on' : ''}`}
+                      onClick={() => { rate(n); setPop(false) }} aria-label={`${n} star`}>
+                      <IconStar size={32} filled={rating >= n} />
+                    </button>
+                  ))}
+                </div>
+              )}
+              <button className="link-btn" style={{ marginTop: 12 }} onClick={() => { setPop(false); setPrivateOpen(true) }}>
+                Something not right? Tell the clinic privately
+              </button>
+              <button className="link-btn" style={{ marginTop: 8 }} onClick={() => setPop(false)}>Not now</button>
+            </div>
           </div>
         )}
 
