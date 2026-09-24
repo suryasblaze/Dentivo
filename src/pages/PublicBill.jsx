@@ -24,7 +24,7 @@ export default function PublicBill() {
   const { submitFeedback } = useClinic()
   /* the bill is compressed inside the link, so unpacking it is async */
   const [data, setData] = useState(undefined)
-  useEffect(() => { let on = true; readBillLink(hash).then(d => on && setData(d)); return () => { on = false } }, [hash])
+  useEffect(() => { let on = true; readBillLink(hash, id).then(d => on && setData(d)); return () => { on = false } }, [hash, id])
 
   const [rating, setRating] = useState(0)
   const [hover, setHover] = useState(0)

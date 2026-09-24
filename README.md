@@ -84,11 +84,14 @@ number per visit, balance carried once), the PDF bill's contents, and every rout
 
 **The WhatsApp bill.** *Finish & send bill* at checkout sends one WhatsApp message with one
 link. The link opens the bill on the patient's phone: items, payments, a UPI button for any
-balance, the prescription, and a PDF download. When the treatment is finished it also asks for a
-review — tapping a star opens the clinic's Google write-a-review box. Every patient is offered
-Google whatever they rate (showing it only to happy patients is review gating, which Google
-forbids), plus an optional private note to the clinic. Without a backend the bill travels inside
-the link after the `#`, which browsers never send to a server.
+balance, the prescription, and a PDF download. The moment the PDF is downloaded, a popup asks for
+a Google review — every patient is offered Google whatever they think (showing it only to happy
+patients is review gating, which Google forbids), plus an optional private note.
+
+**Short links.** With no backend the bill travels inside the link after the `#`, which browsers
+never send to a server — safe, but long. Add a Supabase project (`docs/shortlink.sql`, then
+`VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`) and the same link becomes `/b/x7k2p9`. Nothing
+else changes, and without those keys everything still works.
 
 Two limits while there is no backend: data does not follow you between devices or browsers, and
 a patient scanning the QR on their own phone writes to *their* storage, not your dashboard.

@@ -8,6 +8,7 @@
    ========================================================================= */
 
 import { inr, prettyDate } from './format'
+import { storeBill, loadBill, shortLinksReady } from './shortlink'
 
 /* ---------- UPI ---------- */
 export function upiLink({ vpa, name, amount, note }) {
@@ -109,11 +110,18 @@ const origin = () => (typeof window !== 'undefined' ? window.location.origin : '
    "does nothing" on a phone. */
 export const isLocalLink = (url) => /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])/i.test(String(url || ''))
 
-/* compressed — what actually gets sent */
+/* What actually gets sent. With a Supabase project configured the bill is
+   stored once and the link is just its ticket — about 35 characters. Without
+   one, the bill rides inside the link, compressed. */
 export async function billLink(args) {
   const id = args?.visit?.id
   if (!id) return ''
-  const json = new TextEncoder().encode(JSON.stringify(billPayload(args)))
+  const payload = billPayload(args)
+  if (shortLinksReady()) {
+    const token = await storeBill(payload)
+    if (token) return `${origin()}/b/${token}`
+  }
+  const json = new TextEncoder().encode(JSON.stringify(payload))
   const small = await squeeze(json).catch(() => null)
   const body = small && small.length < json.length ? 'z' + b64(small) : 'j' + b64(json)
   return `${origin()}/b/${id}#${body}`
@@ -128,14 +136,27 @@ export function billLinkSync(args) {
 
 /* Back to the shapes billPdf() and the bill page use. Null if the link was
    cut short, which is what a half-copied link looks like. */
-export async function readBillLink(hash) {
+export async function readBillLink(hash, id) {
+  const raw = String(hash || '').replace(/^#/, '')
+  if (!raw && id) {
+    const stored = await loadBill(id)
+    return stored ? shapeBill(stored) : null
+  }
   try {
-    const raw = String(hash || '').replace(/^#/, '')
     const kind = raw[0] === 'z' || raw[0] === 'j' ? raw[0] : 'j'
     const body = raw[0] === 'z' || raw[0] === 'j' ? raw.slice(1) : raw
     const bytes = unb64(body)
     const json = new TextDecoder().decode(kind === 'z' ? await unsqueeze(bytes) : bytes)
     const d = JSON.parse(json)
+    return shapeBill(d)
+  } catch {
+    return null
+  }
+}
+
+/* the stored/encoded shape -> what the bill page and the PDF expect */
+function shapeBill(d) {
+  try {
     if (d?.v !== 1) return null
     const [subtotal, discount, gstAmt, total, paid, due] = d.m || []
     return {
