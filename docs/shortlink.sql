@@ -1,7 +1,9 @@
 -- =========================================================================
 -- Short bill links — run once in Supabase (SQL Editor).
 --
--- One row per bill sent. The id is the whole link: /b/x7k2p9
+-- One row per bill sent. The id is the whole link: /b/x7k2p9mn3qr4
+-- (14 random characters — the id is the only thing protecting the row, so
+--  it is long enough that guessing one is not worth attempting.)
 -- Anyone holding a link can read that one row, which is the point; nobody
 -- can list the table, change a bill or read anything else.
 -- =========================================================================
@@ -10,7 +12,7 @@ create table if not exists public.bills (
   id          text primary key,
   data        jsonb not null,
   created_at  timestamptz not null default now(),
-  expires_at  timestamptz not null default now() + interval '180 days'
+  expires_at  timestamptz not null default now() + interval '90 days'
 );
 
 alter table public.bills enable row level security;

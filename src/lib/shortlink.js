@@ -5,7 +5,7 @@
    is why those links are long. Given a Supabase project, the bill is stored
    once and the link becomes a ticket:
 
-       dentivo.app/b/x7k2p9          instead of  /b/v47js9j0#zjYyxCsJAEER…
+       dentivo.app/b/x7k2p9mn3qr4       instead of  /b/v47js9j0#zjYyxCsJAEER…
 
    Set up (once):
      1. Create a Supabase project.
@@ -27,13 +27,21 @@ const TABLE = 'bills'
 
 export const shortLinksReady = () => !!(URL_BASE && ANON)
 
-/* 8 characters from an alphabet without look-alikes (no O/0, I/l/1) —
-   ~2.8 trillion combinations, so a link cannot be guessed. */
-const ALPHABET = '23456789abcdefghjkmnpqrstuvwxyz'
+/* The id is the only thing protecting a bill, so it has to be far beyond
+   guessing: 14 characters of 32 possibilities is about 70 bits. Someone
+   trying a million ids a second would still be at it long after the rows
+   have expired.
+
+   The alphabet is exactly 32 characters — a power of two — so masking with
+   & 31 maps each random byte evenly. Using % here would make the first few
+   characters slightly likelier than the rest. Look-alikes (i, l, o) are left
+   out so a link can be read over the phone. */
+const ALPHABET = '023456789abcdefghjkmnpqrstuvwxyz'
+const ID_LEN = 14
 const newId = () => {
-  const a = new Uint8Array(8)
-  crypto.getRandomValues(a)
-  return Array.from(a, b => ALPHABET[b % ALPHABET.length]).join('')
+  const buf = new Uint8Array(ID_LEN)
+  crypto.getRandomValues(buf)
+  return Array.from(buf, b => ALPHABET[b & 31]).join('')
 }
 
 const headers = () => ({

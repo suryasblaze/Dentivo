@@ -90,7 +90,7 @@ patients is review gating, which Google forbids), plus an optional private note.
 
 **Short links.** With no backend the bill travels inside the link after the `#`, which browsers
 never send to a server — safe, but long. Add a Supabase project (`docs/shortlink.sql`, then
-`VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`) and the same link becomes `/b/x7k2p9`. Nothing
+`VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`) and the same link becomes `/b/x7k2p9mn3qr4`. Nothing
 else changes, and without those keys everything still works.
 
 Two limits while there is no backend: data does not follow you between devices or browsers, and
