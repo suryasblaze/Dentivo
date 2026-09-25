@@ -67,7 +67,6 @@ const ROUTES = [
   })).toString('base64url'),
   '/b/v1#cut-short',
   '/go/demo', '/go/other?c=Sree%20Dental&g=https%3A%2F%2Fg.page%2Fr%2Fx%2Freview',
-  '/reviewflow', '/reviewflow/scan',
 ]
 
 const entry = join(TMP, 'entry.jsx')
@@ -91,7 +90,7 @@ await build({
   platform: 'node',
   outfile: join(TMP, 'bundle.mjs'),
   loader: { '.png': 'dataurl', '.css': 'empty' },
-  external: ['react', 'react-dom', 'react-dom/server', 'react-router-dom', 'jspdf', 'qrcode-generator'],
+  external: ['react', 'react-dom', 'react-dom/server', 'react-router-dom', 'jspdf'],
   jsx: 'automatic',
   logLevel: 'error',
 })

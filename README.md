@@ -122,20 +122,6 @@ npm run build
 npx vercel --prod
 ```
 
----
-
-## SRT ReviewFlow demo — `/reviewflow`
-
-A separate product demo (SRT Digital Solutions), sharing this build but not Dentivo's data or
-login. Reception completes a visit; ReviewFlow waits, sends the WhatsApp request, sends one
-reminder if nothing happens, and stops. The patient chooses Google or private feedback — both are
-offered to everyone. Private feedback is tagged from the patient's own words and summarised.
-
-- **Run Patient Demo** walks one patient through it; the demo clock (+30 min / +3 h / +1 day)
-  replaces real waiting.
-- `/reviewflow/scan` is the optional QR entry (name + mobile).
-- Rules live in `src/reviewflow/engine.js` as pure functions, ready to move to a server
-  scheduler; `npm run test:reviewflow` covers them.
 - Simulated in the demo: WhatsApp sending and delivery, Meta template approval, and AI analysis
   (keyword tagging stands in for the model).
 
