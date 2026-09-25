@@ -11,7 +11,6 @@ import ShortReview from './pages/ShortReview'
 /* separate product — loaded only when /reviewflow is opened */
 const ReviewFlow = React.lazy(() => import('./reviewflow/ReviewFlow'))
 const ReviewFlowScan = React.lazy(() => import('./reviewflow/Scan'))
-const Autopilot = React.lazy(() => import('./autopilot/Autopilot'))
 const Loading = () => <div style={{ padding: 40, textAlign: 'center', color: '#64748B' }}>Loading SRT ReviewFlow…</div>
 import Payments from './pages/Payments'
 import Reviews from './pages/Reviews'
@@ -103,9 +102,6 @@ function Router() {
         {/* SRT ReviewFlow — separate product demo, no login */}
         <Route path="/reviewflow" element={<React.Suspense fallback={<Loading />}><ReviewFlow /></React.Suspense>} />
         <Route path="/reviewflow/scan" element={<React.Suspense fallback={<Loading />}><ReviewFlowScan /></React.Suspense>} />
-
-        {/* Autopilot — standalone agent console, not part of the clinic app */}
-        <Route path="/autopilot" element={<React.Suspense fallback={<Loading />}><Autopilot /></React.Suspense>} />
 
         <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
         {PAGES.map(([path, Comp]) => (

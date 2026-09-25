@@ -139,17 +139,3 @@ offered to everyone. Private feedback is tagged from the patient's own words and
 - Simulated in the demo: WhatsApp sending and delivery, Meta template approval, and AI analysis
   (keyword tagging stands in for the model).
 
-## Autopilot demo — `/autopilot`
-
-A standalone console, wired to nothing else: eight agents read what comes into a clinic (QR form,
-WhatsApp question, missed call, freed slot, unpaid balance, feedback, recall) and do the work.
-Press **Play a morning** to watch a day run, or send single events in from the right.
-
-- **Autopilot ON** — agents act; you are told afterwards.
-- **Autopilot OFF** — agents still decide, but every action waits as a draft for one tap.
-- Each agent is separately **Auto · Suggest · Off**.
-- Policy, not cleverness, decides what stops: anything clinical, anything that changes what a
-  patient pays, an unhappy patient, a patient asking for a person, a possible emergency. These
-  wait for a human even on full autopilot.
-- "How it decided" shows the tool calls behind every action.
-- Rules live in `src/autopilot/engine.js` as pure functions; `npm run test:autopilot` covers them.
