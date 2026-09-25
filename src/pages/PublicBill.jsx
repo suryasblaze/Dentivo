@@ -226,10 +226,10 @@ export default function PublicBill() {
         )}
 
         {pop && (
-          <div className="pop" role="dialog" aria-modal="true" onClick={() => setPop(false)}>
-            <div className="pop-card" onClick={e => e.stopPropagation()}>
-              <button className="pop-x" onClick={() => setPop(false)} aria-label="Close"><IconX size={14} /></button>
-              <div className="pop-ico"><IconCheck size={22} /></div>
+          <div className="mdl" role="dialog" aria-modal="true" onClick={() => setPop(false)}>
+            <div className="mdl-card" onClick={e => e.stopPropagation()}>
+              <button className="mdl-x" onClick={() => setPop(false)} aria-label="Close"><IconX size={14} /></button>
+              <div className="mdl-ico"><IconCheck size={22} /></div>
               <h3>Your bill is downloaded</h3>
               <p>
                 {google

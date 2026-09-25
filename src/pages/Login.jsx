@@ -72,9 +72,9 @@ function SignUp({ onClose, onDone }) {
   const valid = f.clinic.trim() && f.owner.trim() && f.mobile.replace(/\D/g, '').length >= 10
 
   return (
-    <div className="pop" role="dialog" aria-modal="true" onClick={onClose}>
-      <div className="pop-card auth-signup" onClick={e => e.stopPropagation()}>
-        <button className="pop-x" onClick={onClose} aria-label="Close"><IconX size={14} /></button>
+    <div className="mdl" role="dialog" aria-modal="true" onClick={onClose}>
+      <div className="mdl-card auth-signup" onClick={e => e.stopPropagation()}>
+        <button className="mdl-x" onClick={onClose} aria-label="Close"><IconX size={14} /></button>
         <h3>Start your free trial</h3>
         <p>30 days of everything. No card, cancel any time.</p>
 
