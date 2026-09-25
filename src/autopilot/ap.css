@@ -120,3 +120,29 @@
   .ap-top { padding: 12px 14px; }
 }
 @media (prefers-reduced-motion: reduce) { .ap * { animation: none !important; transition: none !important; } }
+
+/* ---------- tabs ---------- */
+.ap-tabs { display: inline-flex; background: #fff; border: 1px solid var(--line); border-radius: 11px; padding: 3px; gap: 3px; margin-bottom: 16px; }
+.ap-tabs button { border: 0; background: none; border-radius: 8px; padding: 7px 14px; font-size: 13px; font-weight: 700; color: var(--mut); }
+.ap-tabs button.on { background: var(--ink); color: #fff; }
+
+/* ---------- the journey timeline ---------- */
+.ap-time { position: relative; padding-left: 4px; }
+.ap-day { font-size: 10.5px; font-weight: 800; letter-spacing: .1em; color: var(--faint); margin: 16px 0 8px; }
+.ap-day:first-child { margin-top: 4px; }
+.ap-tl { display: flex; gap: 12px; padding-bottom: 14px; position: relative; animation: apIn .25s ease-out; }
+.ap-tl::before { content: ''; position: absolute; left: 13px; top: 26px; bottom: 0; width: 2px; background: var(--line); }
+.ap-tl:last-child::before { display: none; }
+.ap-tl-dot {
+  width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0;
+  background: var(--acc-bg); color: var(--acc); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--line); z-index: 1;
+}
+.ap-tl.human .ap-tl-dot { background: var(--stop-bg); color: var(--stop); }
+.ap-tl.patient .ap-tl-dot { background: var(--soft); color: var(--ink2); }
+.ap-tl-body { flex: 1; min-width: 0; }
+.ap-tl-detail { margin: 3px 0 0; font-size: 12.5px; color: var(--mut); line-height: 1.5; }
+.ap-quote {
+  margin-top: 7px; padding: 7px 11px; background: var(--soft); border-radius: 9px;
+  font-size: 12.5px; color: var(--ink2); display: inline-block;
+}
+.ap-tool { font-family: ui-monospace, monospace; font-size: 10.5px; color: var(--acc); background: #fff; border: 1px solid #E0E7FF; border-radius: 5px; padding: 1px 6px; }

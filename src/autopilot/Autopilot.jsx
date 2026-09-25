@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 import './ap.css'
 import {
-  AGENTS, EVENTS, NEEDS_HUMAN, agentById, handle, resolve, counts, minutesSaved, MIN, HOUR,
+  AGENTS, EVENTS, NEEDS_HUMAN, JOURNEY, agentById, journeyCounts,
+  handle, resolve, counts, minutesSaved, MIN, HOUR,
 } from './engine'
 import {
   IconSparkle, IconCheck, IconAlert, IconClock, IconWhatsApp, IconPhone, IconUsers,
@@ -52,6 +53,7 @@ export default function Autopilot() {
   const ref = useRef(state); ref.current = state
   const [running, setRunning] = useState(false)
   const [open, setOpen] = useState(null)
+  const [tab, setTab] = useState('today')
 
   useEffect(() => { try { localStorage.setItem(KEY, JSON.stringify(state)) } catch { /* private mode */ } }, [state])
   useEffect(() => { document.title = 'Autopilot — agents run the clinic' }, [])
@@ -112,6 +114,12 @@ export default function Autopilot() {
       </header>
 
       <div className="ap-body">
+        <div className="ap-tabs">
+          <button className={tab === 'today' ? 'on' : ''} onClick={() => setTab('today')}>Today at the clinic</button>
+          <button className={tab === 'journey' ? 'on' : ''} onClick={() => setTab('journey')}>One patient, end to end</button>
+        </div>
+
+        {tab === 'journey' ? <Journey autopilot={state.autopilot} /> : <>
         <h1 className="ap-h1">Your clinic ran itself this morning</h1>
         <p className="ap-lead">
           Eight agents read everything that came in. They did the ordinary work and stopped at the
@@ -222,8 +230,127 @@ export default function Autopilot() {
             </div>
           </div>
         </div>
+        </>}
       </div>
     </div>
+  )
+}
+
+/* ----------------------------------------------------- one patient, end to end */
+function Journey({ autopilot }) {
+  const [upto, setUpto] = useState(0)
+  const [running, setRunning] = useState(false)
+  const jc = journeyCounts()
+
+  const play = async () => {
+    if (running) return
+    setRunning(true)
+    setUpto(0)
+    for (let i = 1; i <= JOURNEY.length; i++) {
+      setUpto(i)
+      await new Promise(r => setTimeout(r, 420))
+    }
+    setRunning(false)
+  }
+
+  const when = (mins) => {
+    if (mins < 60) return 'Day 1'
+    if (mins < 1440) return 'Day 1'
+    if (mins < 2880) return 'Day 2'
+    if (mins < 10080) return 'Day 3–4'
+    return 'Month 6'
+  }
+  const shown = JOURNEY.slice(0, upto || JOURNEY.length)
+
+  return (
+    <>
+      <div className="ap-grid ap-4" style={{ marginBottom: 14 }}>
+        <div className="ap-card ap-kpi hero"><small>Steps in the journey</small><b>{jc.total}</b><em>form to six-month recall</em></div>
+        <div className="ap-card ap-kpi"><small>Done by agents</small><b>{jc.agent}</b><em>nobody at the desk</em></div>
+        <div className="ap-card ap-kpi warn"><small>Need a person</small><b>{jc.human}</b><em>the dentistry and the plan</em></div>
+        <div className="ap-card ap-kpi"><small>The patient taps</small><b>{jc.patient}</b><em>no app, no login</em></div>
+      </div>
+
+      <div className="ap-card">
+        <div className="ap-head">
+          <h3>Kavya Ramesh — from her first message to her next check-up</h3>
+          <span className="ap-sp" />
+          <button className="ap-btn acc" onClick={play} disabled={running}>{running ? 'Playing…' : '▶ Play the journey'}</button>
+        </div>
+        <p className="sub">
+          {autopilot
+            ? 'Autopilot is on: every agent step below happens by itself.'
+            : 'Autopilot is off: every agent step below waits as a draft for one tap.'}
+        </p>
+
+        <div className="ap-time">
+          {shown.map((s, i) => {
+            const a = s.agent ? agentById(s.agent) : null
+            const Icon = s.who === 'human' ? IconUsers : s.who === 'patient' ? IconPhone : (ICONS[s.agent] || IconSparkle)
+            const prevDay = i > 0 ? when(shown[i - 1].at) : null
+            const day = when(s.at)
+            return (
+              <React.Fragment key={s.id}>
+                {day !== prevDay && <div className="ap-day">{day}</div>}
+                <div className={`ap-tl ${s.who}`}>
+                  <span className="ap-tl-dot"><Icon size={11} color="currentColor" /></span>
+                  <div className="ap-tl-body">
+                    <div className="ap-row">
+                      <b style={{ fontSize: 13 }}>{s.title}</b>
+                      {s.who === 'agent' && <span className="ap-tag acc">{a?.name} agent</span>}
+                      {s.who === 'human' && <span className="ap-tag red">A person does this</span>}
+                      {s.who === 'patient' && <span className="ap-tag">Patient</span>}
+                      {s.who === 'agent' && !autopilot && <span className="ap-tag amber">waits for your tap</span>}
+                    </div>
+                    <p className="ap-tl-detail">{s.detail}</p>
+                    {s.message && <div className="ap-draft" style={{ marginTop: 7 }}><p>{s.message}</p></div>}
+                    {s.quote && <div className="ap-quote">{s.quote}</div>}
+                    {s.tools?.length > 0 && (
+                      <div className="ap-row" style={{ gap: 5, marginTop: 7 }}>
+                        {s.tools.map(t => <code key={t} className="ap-tool">{t}</code>)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </React.Fragment>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="ap-grid ap-3" style={{ marginTop: 14 }}>
+        <div className="ap-card">
+          <div className="ap-head"><IconUsers size={14} style={{ color: 'var(--stop)' }} /><h3>What people still do</h3></div>
+          {['Examine, diagnose, treat — all of it',
+            'Approve the treatment plan the agent drafted',
+            'Approve any discount or refund',
+            'Call anyone in pain, or anyone upset',
+            'Greet, seat, sterilise, take X-rays'].map(t => (
+              <div key={t} className="ap-rule"><IconCheck size={11} style={{ color: 'var(--stop)', marginTop: 3, flexShrink: 0 }} /><span>{t}</span></div>
+            ))}
+        </div>
+        <div className="ap-card">
+          <div className="ap-head"><IconSparkle size={14} style={{ color: 'var(--acc)' }} /><h3>What the dentist gains</h3></div>
+          {['Notes written from dictation, not typed',
+            'A treatment plan drafted, ready to approve or change',
+            'History and allergies read out before the patient sits down',
+            'After-care and follow-ups sent without being asked',
+            'No diary to keep for recalls'].map(t => (
+              <div key={t} className="ap-rule"><IconCheck size={11} style={{ color: 'var(--acc)', marginTop: 3, flexShrink: 0 }} /><span>{t}</span></div>
+            ))}
+        </div>
+        <div className="ap-card">
+          <div className="ap-head"><IconAlert size={14} style={{ color: 'var(--wait)' }} /><h3>Where it stops by itself</h3></div>
+          {['She replies “still hurting” → call task for Dr. Arun, that minute',
+            'She asks what a crown costs → answered from your price list',
+            'She asks for a discount → waits for you',
+            'She asks to speak to someone → reception is told',
+            'Treatment unfinished → no review ask at all'].map(t => (
+              <div key={t} className="ap-rule"><IconArrowRight size={11} style={{ color: 'var(--wait)', marginTop: 3, flexShrink: 0 }} /><span>{t}</span></div>
+            ))}
+        </div>
+      </div>
+    </>
   )
 }
 

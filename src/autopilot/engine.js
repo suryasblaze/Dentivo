@@ -208,3 +208,161 @@ export const counts = (state) => ({
 /* What the clinic saved: every action an agent finished on its own is work
    nobody had to do. Two minutes each is deliberately conservative. */
 export const minutesSaved = (state) => counts(state).handled * 2
+
+/* =========================================================================
+   One patient, end to end.
+
+   Everything around the dentistry is an agent's job. The dentistry itself
+   is not, and never will be: a person examines, a person drills, a person
+   decides what treatment is right. What agents remove is the fetching,
+   typing, chasing and reminding either side of the chair.
+
+   `who` says who acts:
+     agent   — done automatically (or drafted, when autopilot is off)
+     patient — the patient taps something on their phone
+     human   — a person at the clinic must do it
+   `needs` names the policy reason a human is involved.
+   ========================================================================= */
+export const JOURNEY = [
+  {
+    id: 'form', at: 0, who: 'patient', agent: 'intake',
+    title: 'Patient fills the QR form',
+    detail: 'Name, mobile, and what is wrong — four fields, no login',
+    quote: 'Kavya Ramesh · 98410 55221 · “Tooth sensitivity, cold water hurts”',
+  },
+  {
+    id: 'record', at: 1, who: 'agent', agent: 'intake',
+    title: 'Record created and checked for duplicates',
+    detail: 'No existing file on that mobile, so a new one is opened with a UHID',
+    tools: ['find_patient', 'create_patient'],
+  },
+  {
+    id: 'offer', at: 2, who: 'agent', agent: 'scheduler',
+    title: 'Slots offered on WhatsApp',
+    detail: 'Reads the diary and offers three real openings, nearest first',
+    tools: ['get_slots'],
+    message: 'Hello Kavya, thank you for your details. Dr. Arun can see you tomorrow at 10:30 am, 4:00 pm, or Friday 11:00 am. Reply 1, 2 or 3.',
+  },
+  {
+    id: 'pick', at: 9, who: 'patient', agent: 'scheduler',
+    title: 'Patient replies “1”',
+    detail: 'Nobody at the desk was involved',
+    quote: '1',
+  },
+  {
+    id: 'book', at: 10, who: 'agent', agent: 'scheduler',
+    title: 'Appointment booked and confirmed',
+    detail: 'Chair 2 held, confirmation sent with directions and what to bring',
+    tools: ['book_appointment', 'send_whatsapp'],
+    message: 'Booked — tomorrow 10:30 am with Dr. Arun. We are at Anna Nagar, opposite the bus depot. Bring any old X-rays if you have them.',
+  },
+  {
+    id: 'history', at: 12, who: 'agent', agent: 'intake',
+    title: 'Medical history asked before the visit',
+    detail: 'Two questions only: medicines you take, anything you are allergic to',
+    tools: ['send_form'],
+    message: 'Before you come: are you taking any medicines, and are you allergic to anything? Reply here — it takes 20 seconds.',
+  },
+  {
+    id: 'remind', at: 1200, who: 'agent', agent: 'scheduler',
+    title: 'Reminder the evening before',
+    detail: 'The single message that removes most no-shows',
+    tools: ['send_whatsapp'],
+    message: 'See you tomorrow at 10:30 am, Kavya. Reply C to confirm or R to move it.',
+  },
+  {
+    id: 'confirm', at: 1210, who: 'patient', agent: 'scheduler',
+    title: 'Patient confirms',
+    detail: 'A cancellation here would have been offered to the waitlist automatically',
+    quote: 'C',
+  },
+  {
+    id: 'prep', at: 1400, who: 'agent', agent: 'manager',
+    title: 'Chair prepared before she arrives',
+    detail: 'Brief on the assistant’s screen: sensitivity, no allergies, first visit, nervous',
+    tools: ['patient_summary'],
+  },
+  {
+    id: 'arrive', at: 1440, who: 'agent', agent: 'frontdesk',
+    title: 'Checked in from her phone',
+    detail: 'Token sent when she arrives; the desk sees her in the queue',
+    tools: ['check_in'],
+    message: 'You are checked in — token T-04. Dr. Arun is running about 10 minutes behind.',
+  },
+  {
+    id: 'consult', at: 1450, who: 'human', agent: null, needs: 'clinical',
+    title: 'Dr. Arun examines her',
+    detail: 'The examination, the X-ray, the judgement. No agent goes near this.',
+  },
+  {
+    id: 'chart', at: 1470, who: 'agent', agent: 'manager',
+    title: 'Notes written up from the dentist’s dictation',
+    detail: 'Dictated in Tamil and English, structured into the chart — tooth 36, deep caries',
+    tools: ['transcribe', 'draft_chart'],
+  },
+  {
+    id: 'plan', at: 1475, who: 'human', agent: 'manager', needs: 'clinical',
+    title: 'Dentist approves the treatment plan',
+    detail: 'The agent drafted it from the chart. It is not a plan until the dentist says so.',
+  },
+  {
+    id: 'estimate', at: 1480, who: 'agent', agent: 'billing',
+    title: 'Estimate sent for her to accept',
+    detail: 'Itemised from the approved plan and your price list — no figure invented',
+    tools: ['price_list', 'send_estimate'],
+    message: 'Dr. Arun recommends a filling on the lower left molar — ₹2,500, one sitting. Shall we go ahead today?',
+  },
+  {
+    id: 'treat', at: 1500, who: 'human', agent: null, needs: 'clinical',
+    title: 'Treatment done',
+    detail: 'A person does the dentistry. This is the part the clinic is paid for.',
+  },
+  {
+    id: 'bill', at: 1560, who: 'agent', agent: 'billing',
+    title: 'Bill raised and sent',
+    detail: 'Built from what was actually completed, with a UPI link for the balance',
+    tools: ['make_invoice', 'send_bill'],
+    message: 'Your bill: filling on tooth 36, ₹2,500. Tap to view, download the PDF, or pay by UPI.',
+  },
+  {
+    id: 'pay', at: 1575, who: 'agent', agent: 'billing',
+    title: 'Payment matched to the bill',
+    detail: 'UPI received and reconciled; receipt sent. A discount would have needed you.',
+    tools: ['match_payment', 'send_receipt'],
+  },
+  {
+    id: 'aftercare', at: 1700, who: 'agent', agent: 'frontdesk',
+    title: 'After-care that evening',
+    detail: 'Written once by the dentist, sent automatically to every filling patient',
+    tools: ['send_whatsapp'],
+    message: 'Kavya, avoid very hot or cold food tonight. Mild sensitivity for a day or two is normal. Message here if anything worries you.',
+  },
+  {
+    id: 'review', at: 2880, who: 'agent', agent: 'reviews',
+    title: 'Review asked the next day',
+    detail: 'Only because the treatment finished — mid-treatment patients are never asked',
+    tools: ['check_rules', 'send_review_link'],
+    message: 'Thank you for visiting, Kavya. If you have 10 seconds, tell us how we did.',
+  },
+  {
+    id: 'checkup', at: 5760, who: 'agent', agent: 'frontdesk',
+    title: 'Three-day check',
+    detail: 'If she answers “still hurting”, this becomes a call task for Dr. Arun within the minute',
+    tools: ['send_whatsapp', 'watch_reply'],
+    message: 'How is the tooth settling, Kavya?',
+  },
+  {
+    id: 'recall', at: 262800, who: 'agent', agent: 'scheduler',
+    title: 'Six-month recall',
+    detail: 'The revenue most clinics lose entirely, remembered without anyone keeping a diary',
+    tools: ['recall_due', 'send_whatsapp'],
+    message: 'It has been six months, Kavya. Shall we book your check-up and cleaning?',
+  },
+]
+
+export const journeyCounts = () => {
+  const agent = JOURNEY.filter(s => s.who === 'agent').length
+  const human = JOURNEY.filter(s => s.who === 'human').length
+  const patient = JOURNEY.filter(s => s.who === 'patient').length
+  return { agent, human, patient, total: JOURNEY.length }
+}
