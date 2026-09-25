@@ -68,6 +68,7 @@ const ROUTES = [
   '/b/v1#cut-short',
   '/go/demo', '/go/other?c=Sree%20Dental&g=https%3A%2F%2Fg.page%2Fr%2Fx%2Freview',
   '/reviewflow', '/reviewflow/scan',
+  '/autopilot',
 ]
 
 const entry = join(TMP, 'entry.jsx')
