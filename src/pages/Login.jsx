@@ -139,9 +139,15 @@ export default function Login() {
       {/* ---------------- Left: the form ---------------- */}
       <div className="auth-left">
         <div className="auth-form">
-          <div className="row" style={{ gap: 9, marginBottom: 26 }}>
-            <LogoMark size={30} />
-            <LogoWordmark width={96} />
+          <div className="auth-head">
+            <div className="row" style={{ gap: 9 }}>
+              <LogoMark size={32} />
+              <LogoWordmark width={104} />
+            </div>
+            <div className="auth-by">
+              <span>Developed by</span>
+              <img src="/srt-digital.png" alt="SRT Digital Solutions" />
+            </div>
           </div>
 
           <h1>Welcome back!</h1>
@@ -192,11 +198,6 @@ export default function Login() {
             Don&apos;t have an account?{' '}
             <button type="button" className="auth-link" onClick={() => setSignup(true)}>Sign up free</button>
             <span className="auth-foot-note">30-day trial · no card needed</span>
-          </div>
-
-          <div className="auth-by">
-            <span>Developed by</span>
-            <img src="/srt-digital.png" alt="SRT Digital Solutions" />
           </div>
         </div>
       </div>
