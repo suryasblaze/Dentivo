@@ -1,26 +1,31 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { IconToothFilled, IconSparkle } from '../lib/icons'
 
 /* =========================================================================
    SRT ReviewFlow — the mark and the wordmark.
 
-   Drawn rather than loaded as images, so the logo takes the brand colour
-   from the stylesheet and stays sharp at any size.
+   The mark is the artwork in public/logo-mark.png; the name beside it is
+   set in type, so it stays sharp at any size and is always spelled right.
    ========================================================================= */
 
 export function LogoMark({ size = 28 }) {
-  return (
-    <span
-      aria-label="SRT ReviewFlow"
-      style={{
+  const [ok, setOk] = useState(true)
+  if (!ok) {
+    /* if the artwork ever fails to load, the brand still shows up */
+    return (
+      <span style={{
         width: size, height: size, borderRadius: size * 0.3, flexShrink: 0,
         background: 'linear-gradient(140deg, var(--g-500), var(--g-700))',
         display: 'grid', placeItems: 'center',
-        boxShadow: `0 ${size * 0.12}px ${size * 0.3}px -${size * 0.14}px rgba(14, 124, 138, .55)`,
-      }}
-    >
-      <IconToothFilled size={size * 0.56} color="#fff" />
-    </span>
+      }}>
+        <IconToothFilled size={size * 0.56} color="#fff" />
+      </span>
+    )
+  }
+  return (
+    <img src="/logo-mark.png" alt="SRT ReviewFlow" width={size} height={size}
+      style={{ display: 'block', flexShrink: 0, objectFit: 'contain' }}
+      onError={() => setOk(false)} />
   )
 }
 
