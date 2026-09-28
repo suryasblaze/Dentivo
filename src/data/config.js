@@ -16,7 +16,7 @@ export const DEFAULT_CLINIC = {
 }
 
 export const DEFAULT_STAFF = [
-  { id: 'u1', name: 'Clinic Admin', role: 'Owner', short: 'CA', color: '#197E65', email: '', spec: '', reg: '' },
+  { id: 'u1', name: 'Clinic Admin', role: 'Owner', short: 'CA', color: '#0E7C8A', email: '', spec: '', reg: '' },
 ]
 
 export const DEFAULT_CHAIRS = [
@@ -25,7 +25,7 @@ export const DEFAULT_CHAIRS = [
 
 export const ROLES = ['Owner', 'Dentist', 'Reception', 'Assistant']
 
-export const ROLE_COLORS = ['#197E65', '#2B63D9', '#6A44CC', '#C8860D', '#C93F4A', '#0E7C7B', '#B65A2E', '#3B4B9A']
+export const ROLE_COLORS = ['#0E7C8A', '#2B63D9', '#6A44CC', '#C8860D', '#C93F4A', '#0E7C7B', '#B65A2E', '#3B4B9A']
 
 /* The stages a visit moves through — these are the side-navigation items */
 export const STAGES = [

@@ -5,7 +5,7 @@
    is why those links are long. Given a Supabase project, the bill is stored
    once and the link becomes a ticket:
 
-       dentivo.app/b/x7k2p9mn3qr4       instead of  /b/v47js9j0#zjYyxCsJAEER…
+       reviewflow.app/b/x7k2p9mn3qr4    instead of  /b/v47js9j0#zjYyxCsJAEER…
 
    Set up (once):
      1. Create a Supabase project.

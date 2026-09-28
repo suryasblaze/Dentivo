@@ -103,7 +103,7 @@ export default function CheckIn() {
                       const alerts = (p?.medical || []).length + (p?.allergies || []).length
                       return (
                         <DataRow key={a.id}
-                          lead={<Avatar name={p?.name} color="#197E65" size={28} />}
+                          lead={<Avatar name={p?.name} color="#0E7C8A" size={28} />}
                           title={
                             <span className="row" style={{ gap: 5 }}>
                               {p?.name}
@@ -240,7 +240,7 @@ export default function CheckIn() {
                   return (
                     <DataRow key={v.id} on={isActive}
                       onClick={() => { dispatch({ type: 'SET_ACTIVE_VISIT', id: v.id }); nav(stagePath(v.stage)) }}
-                      lead={<Avatar name={p?.name} color="#197E65" size={26} />}
+                      lead={<Avatar name={p?.name} color="#0E7C8A" size={26} />}
                       title={p?.name}
                       sub={`${v.token} · arrived ${v.arrivedAt} · ${v.visitType}`}
                       trail={

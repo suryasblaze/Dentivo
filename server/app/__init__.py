@@ -1,4 +1,4 @@
-"""The Dentivo API.
+"""The SRT ReviewFlow API.
 
 Runs two ways from the same code:
   · locally           python server/run.py
@@ -37,7 +37,7 @@ def create_app(database_url: str | None = None) -> Flask:
 
     @app.get("/api/health")
     def health():
-        return jsonify(ok=True, service="dentivo-api")
+        return jsonify(ok=True, service="srt-reviewflow-api")
 
     @app.teardown_appcontext
     def close_session(exc=None):

@@ -72,7 +72,7 @@ export default function Submissions() {
           {shown.map(s => (
             <Card key={s.id}>
               <div className="row" style={{ marginBottom: 10 }}>
-                <Avatar name={s.name} color={s.status === 'converted' ? '#4E5765' : '#197E65'} size={32} />
+                <Avatar name={s.name} color={s.status === 'converted' ? '#4E5765' : '#0E7C8A'} size={32} />
                 <div style={{ minWidth: 0 }}>
                   <div className="strong" style={{ fontSize: 'var(--fs-md)' }}>{s.name}</div>
                   <div className="faint" style={{ fontSize: 'var(--fs-micro)' }}>

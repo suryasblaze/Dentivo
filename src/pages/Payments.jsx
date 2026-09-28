@@ -118,7 +118,7 @@ export default function Payments() {
                         </td>
                         <td>
                           <div className="row">
-                            <Avatar name={r.patient?.name} color="#197E65" size={22} />
+                            <Avatar name={r.patient?.name} color="#0E7C8A" size={22} />
                             <div>
                               <div className="cell-strong">{r.patient?.name || 'Unknown'}</div>
                               <div className="faint" style={{ fontSize: 'var(--fs-micro)' }}>{r.patient?.uhid}</div>
@@ -193,7 +193,7 @@ export default function Payments() {
               ? <div className="empty">No patient owes anything from past visits.</div>
               : patients.filter(p => p.balance > 0).map(p => (
                 <div className="lrow" key={p.id} style={{ padding: '7px 9px' }}>
-                  <Avatar name={p.name} color="#197E65" size={24} />
+                  <Avatar name={p.name} color="#0E7C8A" size={24} />
                   <div style={{ minWidth: 0 }}>
                     <div className="strong" style={{ fontSize: 'var(--fs-sm)' }}>{p.name}</div>
                     <div className="faint" style={{ fontSize: 'var(--fs-micro)' }}>{p.phone}</div>

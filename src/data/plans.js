@@ -161,7 +161,7 @@ export const ALL_PERMISSIONS = PERMISSIONS.flatMap(g => g.items.map(i => i.key))
 /* ---------- roles every new account starts with ---------- */
 export const DEFAULT_ROLES = [
   {
-    id: 'r_admin', name: 'Admin / Owner', system: true, color: '#197E65',
+    id: 'r_admin', name: 'Admin / Owner', system: true, color: '#0E7C8A',
     desc: 'Full control of the clinic and the subscription',
     perms: ALL_PERMISSIONS,
   },

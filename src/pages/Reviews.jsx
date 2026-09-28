@@ -113,7 +113,7 @@ export default function Reviews() {
                     background: sad ? 'var(--a-rose-bg)' : undefined,
                   }}>
                     <div className="row" style={{ alignItems: 'flex-start' }}>
-                      <Avatar name={p?.name} color="#197E65" size={30} />
+                      <Avatar name={p?.name} color="#0E7C8A" size={30} />
                       <div style={{ minWidth: 0, flex: 1 }}>
                         <div className="row" style={{ gap: 7 }}>
                           <span className="strong" style={{ fontSize: 'var(--fs-md)' }}>{p?.name || 'Unknown'}</span>

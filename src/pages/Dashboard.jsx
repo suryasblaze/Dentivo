@@ -219,7 +219,7 @@ export default function Dashboard() {
                 const p = patients.find(x => x.id === v.patientId)
                 return (
                   <DataRow key={v.id} onClick={() => { dispatch({ type: 'SET_ACTIVE_VISIT', id: v.id }); nav(stagePath(v.stage)) }}
-                    lead={<Avatar name={p?.name} color="#197E65" size={24} />}
+                    lead={<Avatar name={p?.name} color="#0E7C8A" size={24} />}
                     title={p?.name} sub={`${v.token} · ${v.reason || v.visitType}`}
                     trail={<Badge tone="green" dot>{v.stage}</Badge>} />
                 )

@@ -79,7 +79,7 @@ export default function Patients() {
                       <tr key={p.id}>
                         <td onClick={() => nav('/patients/' + p.id)} style={{ cursor: 'pointer' }}>
                           <div className="row">
-                            <Avatar name={p.name} color="#197E65" size={26} />
+                            <Avatar name={p.name} color="#0E7C8A" size={26} />
                             <div>
                               <div className="cell-strong">{p.name}</div>
                               <div className="faint" style={{ fontSize: 'var(--fs-micro)' }}>

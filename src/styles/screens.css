@@ -537,12 +537,13 @@
 .auth-dots.paused button.on::after { animation-play-state: paused; }
 
 .auth-tag-wrap {
-  height: 68px; width: 100%; max-width: 360px;
+  /* tall enough for three lines — the product name is long */
+  height: 98px; width: 100%; max-width: 380px;
   display: grid; place-items: center; overflow: hidden; position: relative;
 }
 .auth-tag {
-  font-size: 21px; font-weight: 800; color: var(--ink); text-align: center;
-  letter-spacing: -.035em; line-height: 1.32; max-width: 22ch;
+  font-size: 20px; font-weight: 800; color: var(--ink); text-align: center;
+  letter-spacing: -.035em; line-height: 1.34; max-width: 24ch;
   animation: tagIn .55s cubic-bezier(.22,.7,.28,1) both;
 }
 .auth-tag b { color: var(--g-700); }

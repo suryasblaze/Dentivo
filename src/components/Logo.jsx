@@ -1,102 +1,82 @@
-import React, { useState } from 'react'
-import { IconToothFilled } from '../lib/icons'
+import React from 'react'
+import { IconToothFilled, IconSparkle } from '../lib/icons'
 
 /* =========================================================================
-   Brand marks. Files live in /public — swap them there and every
-   placement updates. If a file is missing, a drawn fallback is used so
-   the app never shows a broken image.
+   SRT ReviewFlow — the mark and the wordmark.
+
+   Drawn rather than loaded as images, so the logo takes the brand colour
+   from the stylesheet and stays sharp at any size.
    ========================================================================= */
 
-/* Icon only — sidebar, tablet screens, small spots */
 export function LogoMark({ size = 28 }) {
-  const [ok, setOk] = useState(true)
-  if (!ok) {
-    return (
-      <span style={{
-        width: size, height: size, borderRadius: size * 0.32, background: 'var(--g-600)',
-        display: 'grid', placeItems: 'center', flexShrink: 0,
-      }}>
-        <IconToothFilled size={size * 0.58} color="#fff" />
-      </span>
-    )
-  }
   return (
-    <img src="/logo-mark.png" alt="Dentivo" width={size} height={size}
-      style={{ display: 'block', flexShrink: 0, objectFit: 'contain' }}
-      onError={() => setOk(false)} />
+    <span
+      aria-label="SRT ReviewFlow"
+      style={{
+        width: size, height: size, borderRadius: size * 0.3, flexShrink: 0,
+        background: 'linear-gradient(140deg, var(--g-500), var(--g-700))',
+        display: 'grid', placeItems: 'center',
+        boxShadow: `0 ${size * 0.12}px ${size * 0.3}px -${size * 0.14}px rgba(14, 124, 138, .55)`,
+      }}
+    >
+      <IconToothFilled size={size * 0.56} color="#fff" />
+    </span>
   )
 }
 
-/* Stacked mark + wordmark + tagline — login and the public patient form */
-export function LogoFull({ width = 220 }) {
-  const [ok, setOk] = useState(true)
-  if (!ok) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-        <LogoMark size={34} />
-        <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: '-.035em', color: 'var(--ink)' }}>
-          Dentivo
-        </span>
-      </div>
-    )
-  }
-  return (
-    <img src="/logo-full.png" alt="Dentivo — smart dental care, simplified"
-      style={{ width, height: 'auto', display: 'block' }}
-      onError={() => setOk(false)} />
-  )
-}
-
-/* Horizontal wordmark only, no mark */
+/* The name on its own: SRT in brand colour, ReviewFlow in ink. */
 export function LogoWordmark({ width = 150 }) {
-  const [ok, setOk] = useState(true)
-  if (!ok) {
-    return (
-      <span style={{ fontSize: 19, fontWeight: 800, letterSpacing: '-.035em', color: 'var(--ink)' }}>
-        Dentivo
-      </span>
-    )
-  }
+  const size = Math.max(13, width * 0.13)
   return (
-    <img src="/logo-wordmark.png" alt="Dentivo" style={{ width, height: 'auto', display: 'block' }}
-      onError={() => setOk(false)} />
+    <span style={{
+      fontSize: size, fontWeight: 800, letterSpacing: '-.03em', lineHeight: 1,
+      whiteSpace: 'nowrap', color: 'var(--ink)',
+    }}>
+      <span style={{ color: 'var(--g-600)' }}>SRT</span> ReviewFlow
+    </span>
   )
 }
 
-/* ---------- DentiBot: the assistant's own face ---------- */
-export function BotMark({ size = 28 }) {
-  const [ok, setOk] = useState(true)
-  if (!ok) {
-    return (
-      <span style={{
-        width: size, height: size, borderRadius: size * 0.3, background: 'var(--g-600)',
-        display: 'grid', placeItems: 'center', flexShrink: 0,
-      }}>
-        <IconToothFilled size={size * 0.56} color="#fff" />
-      </span>
-    )
-  }
+/* Mark and name together, with the parent brand above it. */
+export function LogoFull({ width = 190, stacked = false }) {
   return (
-    <img src="/bot-mark.png" alt="DentiBot" width={size} height={size}
-      style={{ display: 'block', flexShrink: 0, objectFit: 'contain' }}
-      onError={() => setOk(false)} />
+    <div style={{ display: 'flex', alignItems: 'center', gap: width * 0.05 }}>
+      <LogoMark size={width * 0.19} />
+      <span style={{ lineHeight: 1.15 }}>
+        {stacked && (
+          <small style={{
+            display: 'block', fontSize: width * 0.045, fontWeight: 800,
+            letterSpacing: '.16em', color: 'var(--faint)',
+          }}>
+            SRT DIGITAL SOLUTIONS
+          </small>
+        )}
+        <LogoWordmark width={width * 0.82} />
+      </span>
+    </div>
+  )
+}
+
+/* ---------- The assistant's own face ---------- */
+export function BotMark({ size = 28 }) {
+  return (
+    <span style={{
+      width: size, height: size, borderRadius: '50%', flexShrink: 0,
+      background: 'linear-gradient(140deg, var(--g-400), var(--g-700))',
+      display: 'grid', placeItems: 'center',
+    }}>
+      <IconSparkle size={size * 0.52} color="#fff" />
+    </span>
   )
 }
 
 export function BotFull({ width = 190 }) {
-  const [ok, setOk] = useState(true)
-  if (!ok) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 9, justifyContent: 'center' }}>
-        <BotMark size={34} />
-        <span style={{ fontSize: 19, fontWeight: 800, letterSpacing: '-.035em', color: 'var(--ink)' }}>
-          DentiBot
-        </span>
-      </div>
-    )
-  }
   return (
-    <img src="/bot-full.png" alt="DentiBot" style={{ width, height: 'auto', display: 'block', margin: '0 auto' }}
-      onError={() => setOk(false)} />
+    <div style={{ display: 'flex', alignItems: 'center', gap: 9, justifyContent: 'center' }}>
+      <BotMark size={Math.max(28, width * 0.18)} />
+      <span style={{ fontSize: Math.max(16, width * 0.1), fontWeight: 800, letterSpacing: '-.035em', color: 'var(--ink)' }}>
+        SRT Assistant
+      </span>
+    </div>
   )
 }

@@ -1,20 +1,24 @@
 /* ============================================================
-   Dentivo — Design Tokens
+   SRT ReviewFlow — Design Tokens
    Dense, professional dashboard scale. Derived from the
    client reference. EDIT ONLY THIS FILE TO RE-SKIN.
    ============================================================ */
 :root {
-  /* ---------- Brand green ---------- */
-  --g-900: #0A382D;
-  --g-800: #0F4B3C;
-  --g-700: #145E4B;
-  --g-600: #197E65;   /* PRIMARY — taken from the Dentivo logo */
-  --g-500: #1F9678;
-  --g-400: #43B191;
-  --g-300: #7FCCB2;
-  --g-200: #B2E0D0;
-  --g-100: #DCF1E9;
-  --g-50:  #EFF8F5;
+  /* ---------- Brand teal ----------
+     #25BBCC is the SRT ReviewFlow colour. It sits at --g-500 and carries
+     the brand wherever colour is decoration: charts, highlights, the logo.
+     Buttons and links use the deeper --g-600, because white text on
+     #25BBCC is too faint to read comfortably. */
+  --g-900: #062F35;
+  --g-800: #0A4750;
+  --g-700: #0C6B77;
+  --g-600: #0E7C8A;   /* PRIMARY — white text stays readable on this */
+  --g-500: #25BBCC;   /* THE BRAND COLOUR */
+  --g-400: #4ECEDC;
+  --g-300: #85DFE9;
+  --g-200: #B6EDF3;
+  --g-100: #DDF6F9;
+  --g-50:  #EFFBFC;
 
   /* ---------- Accent palette (icon tiles, categories, charts) ---------- */
   --a-blue:   #2B63D9;  --a-blue-bg:   #E8EFFC;

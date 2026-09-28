@@ -112,7 +112,7 @@ function Topbar() {
           <div className="card" style={{ position: 'absolute', top: 38, left: 0, right: 0, zIndex: 40, padding: 4, boxShadow: 'var(--sh-3)' }}>
             {hits.map(p => (
               <button key={p.id} className="drow" onClick={() => { nav('/patients/' + p.id); setQ('') }}>
-                <Avatar name={p.name} color="#197E65" size={22} />
+                <Avatar name={p.name} color="#0E7C8A" size={22} />
                 <div style={{ minWidth: 0 }}>
                   <div className="drow-t">{p.name}</div>
                   <div className="drow-s">{p.uhid} · {p.phone}</div>
@@ -203,7 +203,7 @@ export function VisitStrip() {
 
   return (
     <div className="visit-strip">
-      <Avatar name={patient.name} color="#197E65" size={26} />
+      <Avatar name={patient.name} color="#0E7C8A" size={26} />
       <div style={{ minWidth: 0 }}>
         <div className="strong" style={{ fontSize: 'var(--fs-base)' }}>{patient.name}</div>
         <div className="faint" style={{ fontSize: 'var(--fs-micro)' }}>

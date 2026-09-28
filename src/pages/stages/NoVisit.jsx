@@ -31,7 +31,7 @@ export default function NoVisit({ stage }) {
               return (
                 <DataRow key={v.id}
                   onClick={() => { dispatch({ type: 'SET_ACTIVE_VISIT', id: v.id }); nav(stagePath(v.stage)) }}
-                  lead={<Avatar name={p?.name} color="#197E65" size={26} />}
+                  lead={<Avatar name={p?.name} color="#0E7C8A" size={26} />}
                   title={p?.name} sub={`${v.token} · arrived ${v.arrivedAt}`}
                   trail={<><Badge tone="green" dot>{v.stage}</Badge>
                     <IconArrowRight size={12} style={{ color: 'var(--faint)' }} /></>} />
@@ -50,7 +50,7 @@ export default function NoVisit({ stage }) {
               return (
                 <DataRow key={v.id}
                   onClick={() => { dispatch({ type: 'SET_ACTIVE_VISIT', id: v.id }); nav('/billing') }}
-                  lead={<Avatar name={p?.name} color="#197E65" size={26} />}
+                  lead={<Avatar name={p?.name} color="#0E7C8A" size={26} />}
                   title={p?.name} sub={`${v.date} · ${v.token}`}
                   trail={<><Badge>{v.rating ? `${v.rating}★` : 'closed'}</Badge>
                     <IconArrowRight size={12} style={{ color: 'var(--faint)' }} /></>} />

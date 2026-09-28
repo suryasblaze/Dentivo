@@ -49,7 +49,7 @@ export default function PatientFile() {
 
       <Card style={{ marginBottom: 10 }}>
         <div className="row wrap" style={{ alignItems: 'flex-start' }}>
-          <Avatar name={p.name} color="#197E65" size={42} />
+          <Avatar name={p.name} color="#0E7C8A" size={42} />
           <div style={{ minWidth: 0 }}>
             <Eyebrow>Patient file</Eyebrow>
             <h1 style={{ fontSize: 19 }}>{p.name}</h1>

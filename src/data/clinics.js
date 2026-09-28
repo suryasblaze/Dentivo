@@ -5,7 +5,7 @@
    review URL — and they are the same for every patient. So they live here
    instead of inside the link, which is how the link stays short:
 
-       dentivo.app/go/sree
+       reviewflow.app/go/sree
 
    Add one line per clinic when you set them up. Anything not listed still
    works: the link then carries the two values as readable parameters

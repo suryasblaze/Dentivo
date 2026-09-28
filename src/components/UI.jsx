@@ -5,7 +5,7 @@ import { IconArrowUpRight, IconTrendUp, IconCheck, IconPlus, IconX } from '../li
 /* ============================================================
    Avatar + stack
    ============================================================ */
-export const Avatar = ({ name = '', initials, color = '#197E65', size = 28 }) => (
+export const Avatar = ({ name = '', initials, color = '#0E7C8A', size = 28 }) => (
   <div className="avatar" style={{ width: size, height: size, background: color, fontSize: size * 0.37 }} title={name}>
     {initials || name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('')}
   </div>

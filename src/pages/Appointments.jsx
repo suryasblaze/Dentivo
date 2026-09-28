@@ -333,7 +333,7 @@ export default function Appointments() {
               )}
             </>}>
             <div style={{ margin: '0 -9px 12px' }}>
-              <DataRow lead={<Avatar name={p?.name} color="#197E65" size={28} />}
+              <DataRow lead={<Avatar name={p?.name} color="#0E7C8A" size={28} />}
                 title={p?.name} sub={p?.phone || 'No number'} trail={<Badge tone={st.tone} dot>{st.label}</Badge>} />
               <DataRow lead={<Tile tone="blue"><IconClock size={12} /></Tile>}
                 title={`${a.time} · ${a.mins} min`} sub={prettyDate(a.date)} />

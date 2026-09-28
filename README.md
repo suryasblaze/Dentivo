@@ -1,9 +1,10 @@
-# Dentivo
+# SRT ReviewFlow
 
 **Smart dental care, simplified.** Practice-management software for dental clinics, built as a
 subscription product for the Indian market.
 
-Front-end demo — no backend yet. Everything you type is saved in your browser.
+React front end plus a Flask API over Supabase Postgres (`server/`). The front end still keeps
+its data in the browser; wiring it to the API is the next step.
 
 ```bash
 npm install

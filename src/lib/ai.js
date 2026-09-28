@@ -96,7 +96,7 @@ export function buildContext(db) {
   }
 }
 
-const SYSTEM = `You are the assistant inside Dentivo, dental clinic software used in India.
+const SYSTEM = `You are the assistant inside SRT ReviewFlow, dental clinic software used in India.
 
 You are given a JSON snapshot of ONE clinic's saved data. Answer only from it.
 

@@ -19,7 +19,7 @@ const FLOATS = [
 const SLIDE_MS = 5000
 
 const SLIDES = [
-  { a: 'Make your clinic easier and organised with ', b: 'Dentivo' },
+  { a: 'Make your clinic easier and organised with ', b: 'SRT ReviewFlow' },
   { a: 'Patients fill their own details from ',       b: 'one QR code' },
   { a: 'From check-in to Google review in ',           b: 'one flow' },
   { a: 'Bill, prescription and care notes on ',        b: 'WhatsApp' },

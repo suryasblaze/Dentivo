@@ -261,7 +261,7 @@ export function apptMessage(kind, { clinic, patient, appt, doctor }) {
 }
 
 /* ---------- The short review link ----------
-   Carries no patient data, so it stays short: dentivo.app/go/sree
+   Carries no patient data, so it stays short: reviewflow.app/go/sree
    A clinic listed in src/data/clinics.js needs nothing else; one that is
    not listed carries its name and Google link as readable parameters. */
 export function shortReviewUrl(clinic, { listed = false } = {}) {

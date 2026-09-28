@@ -1,4 +1,4 @@
-# Dentivo API
+# SRT ReviewFlow API
 
 Flask + SQLAlchemy over Supabase Postgres. The React app talks to it; the
 patient's phone talks to the handful of endpoints under `/api/public`.
