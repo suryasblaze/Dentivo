@@ -193,6 +193,11 @@ export default function Login() {
             <button type="button" className="auth-link" onClick={() => setSignup(true)}>Sign up free</button>
             <span className="auth-foot-note">30-day trial · no card needed</span>
           </div>
+
+          <div className="auth-by">
+            <span>Developed by</span>
+            <img src="/srt-digital.png" alt="SRT Digital Solutions" />
+          </div>
         </div>
       </div>
 

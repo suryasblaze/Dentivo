@@ -1142,3 +1142,11 @@ button.user-chip:hover { background: var(--canvas); }
 .auth-signup .auth-btn { margin-top: 4px; }
 .auth-signup .auth-btn:disabled { opacity: .5; cursor: default; }
 .auth-fine { font-size: var(--fs-micro) !important; color: var(--faint) !important; line-height: 1.5; margin: 12px 0 0 !important; }
+
+/* ---------- who built it, at the foot of the sign-in ---------- */
+.auth-by {
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--line);
+}
+.auth-by span { font-size: var(--fs-micro); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+.auth-by img { height: 30px; width: auto; display: block; }
